@@ -28,34 +28,34 @@
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      padding: 20px;
+      padding: 16px;
     }
 
     .container {
       background-color: var(--card-bg);
       width: 100%;
       max-width: 480px;
-      padding: 30px 24px;
+      padding: 24px 20px;
       border-radius: 20px;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
       text-align: center;
     }
 
     h1 {
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       color: var(--primary-color);
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     p.subtitle {
       font-size: 0.85rem;
       color: var(--sub-text);
-      margin-bottom: 24px;
+      margin-bottom: 20px;
     }
 
     .form-group {
       text-align: left;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
 
     label {
@@ -66,15 +66,25 @@
       color: #555;
     }
 
+    /* スマホでのはみ出しを防止するCSS修正 */
     input[type="date"],
     input[type="text"] {
       width: 100%;
+      max-width: 100%;
       padding: 12px;
       border: 1px solid #ccc;
       border-radius: 10px;
       font-size: 1rem;
       outline: none;
       transition: border-color 0.2s;
+      -webkit-appearance: none;
+      appearance: none;
+      background-color: #fff;
+      box-shadow: none;
+    }
+
+    input[type="date"] {
+      min-height: 46px; /* スマホでの入力欄の高さを均一化 */
     }
 
     input:focus {
@@ -92,7 +102,7 @@
       font-weight: bold;
       cursor: pointer;
       transition: background-color 0.2s, transform 0.1s;
-      margin-top: 10px;
+      margin-top: 6px;
     }
 
     .btn-search:hover {
@@ -112,7 +122,7 @@
 
     .result-card {
       display: none;
-      margin-top: 24px;
+      margin-top: 20px;
       padding: 20px;
       background: linear-gradient(135deg, #e6f2ff 0%, #ffffff 100%);
       border-radius: 15px;
@@ -130,16 +140,17 @@
       font-weight: bold;
       color: #555;
       margin-bottom: 12px;
+      word-break: break-all;
     }
 
     .weather-icon {
-      font-size: 4rem;
+      font-size: 3.8rem;
       line-height: 1;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .weather-text {
-      font-size: 1.4rem;
+      font-size: 1.3rem;
       font-weight: bold;
       color: var(--primary-color);
       margin-bottom: 16px;
@@ -155,20 +166,20 @@
     }
 
     .temp-box {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
     }
 
     .temp-box span {
       display: block;
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: bold;
+      margin-top: 2px;
     }
 
     .temp-max { color: #d9534f; }
     .temp-min { color: #0275d8; }
     .precip { color: #5bc0de; }
 
-    /* 汎用シェアボタン */
     .btn-share {
       display: inline-flex;
       align-items: center;
@@ -183,7 +194,7 @@
       font-size: 0.9rem;
       font-weight: bold;
       cursor: pointer;
-      margin-top: 10px;
+      margin-top: 6px;
       transition: background-color 0.2s, transform 0.1s;
     }
 
@@ -208,6 +219,7 @@
       margin-top: 15px;
       color: #d9534f;
       font-size: 0.85rem;
+      line-height: 1.4;
     }
   </style>
 </head>
@@ -225,7 +237,7 @@
 
       <div class="form-group">
         <label for="location">生まれた場所（旧市町村名もOK）</label>
-        <input type="text" id="location" placeholder="例: 静岡県清水市、東京都新宿区" required>
+        <input type="text" id="location" placeholder="例: 静岡県清水市、天竜市、新宿区" required>
       </div>
 
       <button type="submit" class="btn-search">空模様を見る ☀️</button>
@@ -245,7 +257,6 @@
         <div class="temp-box">降水量<span id="precip" class="precip">-- mm</span></div>
       </div>
 
-      <!-- 汎用シェアボタン -->
       <button id="shareBtn" type="button" class="btn-share">
         🔗 生まれた日の空模様をシェア
       </button>
@@ -254,7 +265,6 @@
   </div>
 
   <script>
-    // 天気コード（WMO Code）変換テーブル
     const weatherMap = {
       0: { text: "快晴", icon: "☀️" },
       1: { text: "晴れ", icon: "🌤️" },
@@ -279,13 +289,49 @@
       99: { text: "激しい雷雨（ひょうを伴う）", icon: "⛈️" }
     };
 
-    // 初期値設定（今日の日付を最大値に制限）
     const birthdateInput = document.getElementById('birthdate');
     const today = new Date().toISOString().split('T')[0];
     birthdateInput.setAttribute('max', today);
 
-    // シェア用の文章を保持する変数
     let currentShareText = '';
+
+    // 日本国内の地名検索機能（国土地理院API ➔ Open-Meteo API の順にフォールバック）
+    async function getCoordinates(query) {
+      // 1. 国土地理院 地名検索API（日本語の日本の地名に非常に強い）
+      try {
+        const gsiUrl = `https://msearch.gsi.go.jp/address-search-api/msearch?q=${encodeURIComponent(query)}`;
+        const gsiRes = await fetch(gsiUrl);
+        const gsiData = await gsiRes.json();
+
+        if (gsiData && gsiData.length > 0 && gsiData[0].geometry) {
+          const [lon, lat] = gsiData[0].geometry.coordinates;
+          const title = gsiData[0].properties.title || query;
+          return { lat, lon, name: title };
+        }
+      } catch (e) {
+        console.warn("GSI geocoding failed, trying fallback...", e);
+      }
+
+      // 2. Open-Meteo 地名検索API（海外やフォールバック）
+      try {
+        let omRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=ja&format=json`);
+        let omData = await omRes.json();
+
+        if (!omData.results || omData.results.length === 0) {
+          omRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent('Japan ' + query)}&count=1&language=ja&format=json`);
+          omData = await omRes.json();
+        }
+
+        if (omData.results && omData.results.length > 0) {
+          const res = omData.results[0];
+          return { lat: res.latitude, lon: res.longitude, name: res.name };
+        }
+      } catch (e) {
+        console.warn("Open-Meteo geocoding failed", e);
+      }
+
+      return null;
+    }
 
     document.getElementById('weatherForm').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -304,26 +350,15 @@
       shareToast.style.display = 'none';
 
       try {
-        // 1. 地名から緯度・経度を取得 (Geocoding API)
-        let geocodeRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(locationText)}&count=1&language=ja&format=json`);
-        let geocodeData = await geocodeRes.json();
+        // 地名から緯度経度を取得
+        const geoResult = await getCoordinates(locationText);
 
-        // フォールバック検索
-        if (!geocodeData.results || geocodeData.results.length === 0) {
-          geocodeRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent('日本 ' + locationText)}&count=1&language=ja&format=json`);
-          geocodeData = await geocodeRes.json();
+        if (!geoResult) {
+          throw new Error('場所が見つかりませんでした。「静岡県浜松市」のように都道府県名をつけて入力してみてください。');
         }
 
-        if (!geocodeData.results || geocodeData.results.length === 0) {
-          throw new Error('場所が見つかりませんでした。都道府県名を含めて入力してみてください。');
-        }
-
-        const location = geocodeData.results[0];
-        const lat = location.latitude;
-        const lon = location.longitude;
-
-        // 2. 過去天気データ取得 (Historical Weather API)
-        const weatherUrl = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${date}&end_date=${date}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Asia%2FTokyo`;
+        // 過去天気データ取得
+        const weatherUrl = `https://archive-api.open-meteo.com/v1/archive?latitude=${geoResult.lat}&longitude=${geoResult.lon}&start_date=${date}&end_date=${date}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Asia%2FTokyo`;
         const weatherRes = await fetch(weatherUrl);
         const weatherData = await weatherRes.json();
 
@@ -331,7 +366,6 @@
           throw new Error('指定した日付の天気データが取得できませんでした。');
         }
 
-        // データの抽出
         const code = weatherData.daily.weather_code[0];
         const maxTemp = weatherData.daily.temperature_2m_max[0];
         const minTemp = weatherData.daily.temperature_2m_min[0];
@@ -339,7 +373,6 @@
 
         const weatherInfo = weatherMap[code] || { text: "不明", icon: "🌈" };
 
-        // 3. 結果表示の更新
         const [year, month, day] = date.split('-');
         document.getElementById('resultHeader').innerText = `${year}年${parseInt(month)}月${parseInt(day)}日  ${locationText} 付近`;
         document.getElementById('weatherIcon').innerText = weatherInfo.icon;
@@ -348,8 +381,8 @@
         document.getElementById('tempMin').innerText = `${minTemp} ℃`;
         document.getElementById('precip').innerText = `${precip} mm`;
 
-        // シェア用テキストのセット
-        currentShareText = `私が生まれた日（${year}年${parseInt(month)}月${parseInt(day)}日）の空模様は【${weatherInfo.text} ${weatherInfo.icon}】でした！\n(最高: ${maxTemp}℃ / 最低: ${minTemp}℃)\n\n#私が生まれた日の空模様\n${window.location.href}`;
+        // 地名と降水量を含めたシェア文言に修正
+        currentShareText = `私が生まれた日（${year}年${parseInt(month)}月${parseInt(day)}日 ${locationText} 付近）の空模様は【${weatherInfo.text} ${weatherInfo.icon}】でした！\n(最高: ${maxTemp}℃ / 最低: ${minTemp}℃ / 降水量: ${precip}mm)\n\n#私が生まれた日の空模様\n${window.location.href}`;
 
         resultCard.style.display = 'block';
 
@@ -361,7 +394,6 @@
       }
     });
 
-    // 確実にテキストをコピーするフォールバック関数
     function fallbackCopyTextToClipboard(text) {
       const textArea = document.createElement("textarea");
       textArea.value = text;
@@ -380,14 +412,12 @@
       document.body.removeChild(textArea);
     }
 
-    // シェアボタン押下時のイベント（安全処理）
     document.getElementById('shareBtn').addEventListener('click', async () => {
       const shareToast = document.getElementById('shareToast');
       shareToast.style.display = 'none';
 
       let sharedSuccess = false;
 
-      // 1. Web Share API を試行
       if (navigator.share) {
         try {
           await navigator.share({
@@ -396,11 +426,10 @@
           });
           sharedSuccess = true;
         } catch (err) {
-          // ユーザーのキャンセル、または非対応環境エラーは無視してコピーへ流す
+          // キャンセル時は何もしない
         }
       }
 
-      // 2. Share APIで共有されなかった場合、クリップボードへのコピーを試行
       if (!sharedSuccess) {
         if (navigator.clipboard && window.isSecureContext) {
           try {
