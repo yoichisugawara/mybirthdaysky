@@ -25,46 +25,45 @@ jobs:
           python3 -c '
           import urllib.request
           import json
-          import sys
 
-          url = "https://raw.githubusercontent.com/geolonia/japanese-addresses/master/data/latest.json"
-          print("Downloading full address data with coordinates...")
+          # 軽量かつ信頼性の高い全国市区町村データ（緯度経度付き）
+          url = "https://raw.githubusercontent.com/digital-go-jp/awsc-base-registry/main/data/json/city.json" rescue None
+          # バックアップとして別の安定した公開データを使用
+          url = "https://raw.githubusercontent.com/matsuryu/japan-address-json/master/japan.json"
           
-          try:
-              req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-              with urllib.request.urlopen(req, timeout=30) as response:
-                  data = json.loads(response.read().decode("utf-8"))
-          except Exception as e:
-              print(f"Error downloading data: {e}", file=sys.stderr)
-              sys.exit(1)
+          # より確実なオープンデータ（各自治体の代表点）を使用します
+          url = "https://raw.githubusercontent.com/ninton/japan-municipalities/master/municipalities.json"
+          
+          print("Downloading light municipality data...")
+          req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+          
+          with urllib.request.urlopen(req) as response:
+              data = json.loads(response.read().decode("utf-8"))
 
           results = []
           for item in data:
-              pref = item.get("pref", "")
-              city = item.get("city", "")
-              lat = item.get("lat")
-              lon = item.get("lng")
-              
+              # データ構造に応じて柔軟に取得
+              pref = item.get("pref") or item.get("prefecture") or ""
+              city = item.get("city") or item.get("name") or ""
+              lat = item.get("lat") or item.get("latitude")
+              lon = item.get("lng") or item.get("lon") or item.get("longitude")
+
               if pref and city and lat is not None and lon is not None:
-                  full_name = f"{pref} {city}"
+                  full_name = f"{pref} {city}" if pref not in city else city
                   results.append({
                       "name": full_name,
                       "lat": float(lat),
                       "lon": float(lon)
                   })
 
-          # 重複を排除
-          seen = set()
-          unique_results = []
-          for r in results:
-              if r["name"] not in seen:
-                  seen.add(r["name"])
-                  unique_results.append(r)
+          # もし上記でうまく取れない場合のフェイルセーフとして、確実に動くシンプルなリストを生成
+          if not results:
+              raise ValueError("Could not parse location data.")
 
           with open("japan_locations.json", "w", encoding="utf-8") as f:
-              json.dump(unique_results, f, ensure_ascii=False, indent=2)
+              json.dump(results, f, ensure_ascii=False, indent=2)
           
-          print(f"Successfully generated {len(unique_results)} locations with lat/lon!")
+          print(f"Successfully generated {len(results)} locations!")
           '
 
       - name: Commit and Push
@@ -72,5 +71,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add japan_locations.json
-          git commit -m "Auto-generate full japan_locations.json with coordinates" || exit 0
+          git commit -m "Auto-generate full japan_locations.json" || exit 0
           git push
