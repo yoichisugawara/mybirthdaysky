@@ -80,8 +80,16 @@
       display: block;
       font-size: 0.85rem;
       font-weight: bold;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
       color: #555;
+    }
+
+    .label-hint {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--sub-text);
+      font-weight: normal;
+      margin-bottom: 6px;
     }
 
     .date-selectors {
@@ -121,7 +129,7 @@
       border: 1px solid #ddd;
       border-radius: 10px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      max-height: 220px;
+      max-height: 240px;
       overflow-y: auto;
       z-index: 100;
       display: none;
@@ -130,15 +138,15 @@
 
     .suggest-item {
       padding: 10px 12px;
-      font-size: 0.85rem;
+      font-size: 0.88rem;
       cursor: pointer;
       border-bottom: 1px solid #f0f0f0;
       text-align: left;
+      line-height: 1.4;
     }
 
     .suggest-item:last-child { border-bottom: none; }
     .suggest-item:hover { background-color: #f0f7ff; color: var(--primary-color); }
-    .suggest-sub { font-size: 0.75rem; color: #888; display: block; margin-top: 2px; }
 
     .btn-search {
       width: 100%;
@@ -313,8 +321,9 @@
       </div>
 
       <div class="form-group">
-        <label for="location">生まれた場所（全国の市区町村・旧地名）</label>
-        <input type="text" id="location" placeholder="例: 札幌市、龍山村、水窪町、赤坂" autocomplete="off" required>
+        <label for="location">生まれた場所（市区町村・町名）</label>
+        <span class="label-hint">※「黒森」のように同じ地名がある場合は、候補から所属する都道府県・市町村を選択してください。</span>
+        <input type="text" id="location" placeholder="例: さいたま市、浜松市天竜区龍山町、黒森" autocomplete="off" required>
         <div id="suggestList" class="suggest-list"></div>
       </div>
 
@@ -346,14 +355,14 @@
   <div id="infoModal" class="modal-overlay">
     <div class="modal-content">
       <h3>ℹ️ データ出典・使用技術について</h3>
-      <p>当アプリは以下の公的オープンデータおよびAPIサービスを利用して過去の気象・地名データをリアルタイム取得しています。</p>
+      <p>当アプリはオープンデータおよび気象APIサービスを利用してピンポイントな位置情報と過去の気象データをリアルタイム取得しています。</p>
       <br>
-      <strong>【使用しているデータ・API】</strong>
+      <strong>【使用データ・API】</strong>
       <ul>
-        <li><strong>地名・位置情報:</strong> 国土地理院 ジオコーディングAPI / Open-Meteo Geocoding</li>
-        <li><strong>気象データ:</strong> <a href="https://open-meteo.com/" target="_blank">Open-Meteo Historical Weather API</a></li>
+        <li><strong>位置情報（ジオコーディング）:</strong> <a href="https://www.openstreetmap.org/" target="_blank">OpenStreetMap (Nominatim)</a></li>
+        <li><strong>過去の気象データ:</strong> <a href="https://open-meteo.com/" target="_blank">Open-Meteo Historical Weather API</a></li>
       </ul>
-      <p><small>※ 昭和・平成の大合併等で消滅した旧市町村名や細かい地域名も自動検索されます。</small></p>
+      <p><small>※平成の大合併等で広いエリアとなった市区町村でも、町名・地区名を入力することで標高や地域差を反映したピンポイントな天気を計算します。</small></p>
       <button type="button" class="modal-close-btn" id="modalCloseBtn">閉じる</button>
     </div>
   </div>
@@ -461,26 +470,46 @@
     const locationInput = document.getElementById('location');
     const suggestList = document.getElementById('suggestList');
 
-    // JSON安全取得ヘルパー
-    async function safeFetchJson(url) {
-      try {
-        const res = await fetch(url);
-        if (!res.ok) return null;
-        const contentType = res.headers.get("content-type");
-        if (contentType && contentType.includes("application/json")) {
-          return await res.json();
-        }
-      } catch (e) {
-        console.warn("Fetch Error:", e);
-      }
-      return null;
+    // Nominatimの住所オブジェクトを日本式の文字列に自動生成・整形
+    function formatJapaneseAddress(addr) {
+      if (!addr) return null;
+      const pref = addr.province || addr.state || "";
+      const city = addr.city || addr.ward || addr.town || addr.village || addr.city_district || "";
+      const sub = addr.suburb || addr.quarter || addr.neighbourhood || addr.amenity || "";
+      
+      const parts = [pref, city, sub].filter(Boolean);
+      return parts.length > 0 ? parts.join(" ") : null;
     }
 
-    // サジェスト処理
+    // OpenStreetMap (Nominatim) で住所検索
+    async function searchGeocode(queryText) {
+      try {
+        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(queryText)}&format=json&addressdetails=1&countrycodes=jp&limit=8`;
+        const res = await fetch(url, {
+          headers: { "Accept-Language": "ja" }
+        });
+        if (!res.ok) return [];
+        const data = await res.json();
+        
+        return data.map(item => {
+          const formatted = formatJapaneseAddress(item.address) || item.display_name;
+          return {
+            displayName: formatted,
+            lat: parseFloat(item.lat),
+            lon: parseFloat(item.lon)
+          };
+        });
+      } catch (e) {
+        console.warn("Geocoding fetch error:", e);
+        return [];
+      }
+    }
+
+    // 入力時のサジェスト制御
     locationInput.addEventListener('input', () => {
       clearTimeout(searchDebounce);
-      const rawQuery = locationInput.value.trim();
       selectedGeoData = null;
+      const rawQuery = locationInput.value.trim();
 
       if (rawQuery.length < 1) {
         suggestList.style.display = 'none';
@@ -488,61 +517,31 @@
       }
 
       searchDebounce = setTimeout(async () => {
-        const results = [];
-
-        // 1. 国土地理院 API
-        const gsiData = await safeFetchJson(`https://msearch.gsi.go.jp/address-search-api/msearch?q=${encodeURIComponent(rawQuery)}`);
-        if (Array.isArray(gsiData)) {
-          gsiData.slice(0, 4).forEach(item => {
-            const title = item.properties.title;
-            const [lon, lat] = item.geometry.coordinates;
-            results.push({
-              displayName: title,
-              subText: "国土地理院 地名データ",
-              currentName: title,
-              lat: lat,
-              lon: lon
-            });
-          });
-        }
-
-        // 2. Open-Meteo ジオコーディングAPI (フォールバック)
-        if (results.length < 3) {
-          const omData = await safeFetchJson(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(rawQuery)}&count=5&language=ja&format=json`);
-          if (omData && omData.results) {
-            omData.results.forEach(item => {
-              const name = `${item.admin1 || ''} ${item.name}`.trim();
-              if (!results.some(r => r.displayName === name)) {
-                results.push({
-                  displayName: name,
-                  subText: "広域地名",
-                  currentName: name,
-                  lat: item.latitude,
-                  lon: item.longitude
-                });
-              }
-            });
-          }
-        }
-
+        const results = await searchGeocode(rawQuery);
         if (results.length > 0) {
           suggestList.innerHTML = '';
+          
+          // 重複表示の除外処理
+          const seen = new Set();
           results.forEach(res => {
-            const div = document.createElement('div');
-            div.className = 'suggest-item';
-            div.innerHTML = `<strong>${res.displayName}</strong><span class="suggest-sub">${res.subText}</span>`;
-            div.addEventListener('click', () => {
-              locationInput.value = res.displayName;
-              selectedGeoData = res;
-              suggestList.style.display = 'none';
-            });
-            suggestList.appendChild(div);
+            if (!seen.has(res.displayName)) {
+              seen.add(res.displayName);
+              const div = document.createElement('div');
+              div.className = 'suggest-item';
+              div.innerText = res.displayName;
+              div.addEventListener('click', () => {
+                locationInput.value = res.displayName;
+                selectedGeoData = res;
+                suggestList.style.display = 'none';
+              });
+              suggestList.appendChild(div);
+            }
           });
           suggestList.style.display = 'block';
         } else {
           suggestList.style.display = 'none';
         }
-      }, 250);
+      }, 350);
     });
 
     document.addEventListener('click', (e) => {
@@ -553,6 +552,7 @@
 
     let currentShareText = '';
 
+    // 天気検索実行
     document.getElementById('weatherForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
@@ -579,38 +579,23 @@
       try {
         let geo = selectedGeoData;
 
-        if (!geo) {
-          // 国土地理院 API 検索
-          const gsiData = await safeFetchJson(`https://msearch.gsi.go.jp/address-search-api/msearch?q=${encodeURIComponent(inputText)}`);
-          if (Array.isArray(gsiData) && gsiData.length > 0) {
-            const [lon, lat] = gsiData[0].geometry.coordinates;
-            geo = {
-              currentName: gsiData[0].properties.title || inputText,
-              lat: lat,
-              lon: lon
-            };
-          } else {
-            // Open-Meteo Geocoding 検索
-            const omData = await safeFetchJson(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(inputText)}&count=1&language=ja&format=json`);
-            if (omData && omData.results && omData.results.length > 0) {
-              const item = omData.results[0];
-              geo = {
-                currentName: `${item.admin1 || ''} ${item.name}`.trim(),
-                lat: item.latitude,
-                lon: item.longitude
-              };
-            }
+        if (!geo || geo.displayName !== inputText) {
+          const searchResults = await searchGeocode(inputText);
+          if (searchResults.length > 0) {
+            geo = searchResults[0];
           }
         }
 
         if (!geo) {
-          throw new Error('指定された場所が見つかりませんでした。都道府県名を含めて再入力してみてください。（例: 静岡県周智郡春野町、愛知県豊橋市）');
+          throw new Error('指定された場所の位置情報が見つかりませんでした。都道府県名や市町村名を少し詳しく入力してみてください。');
         }
 
-        // 天気取得 (Open-Meteo Historical Weather API)
+        // Open-Meteo Historical Weather API
         const weatherUrl = `https://archive-api.open-meteo.com/v1/archive?latitude=${geo.lat}&longitude=${geo.lon}&start_date=${dateStr}&end_date=${dateStr}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Asia%2FTokyo`;
-        const weatherData = await safeFetchJson(weatherUrl);
-
+        const res = await fetch(weatherUrl);
+        if (!res.ok) throw new Error('天気データの通信に失敗しました。');
+        
+        const weatherData = await res.json();
         if (!weatherData || !weatherData.daily || !weatherData.daily.weather_code) {
           throw new Error('指定した日付の天気データが取得できませんでした。');
         }
@@ -622,14 +607,14 @@
 
         const weatherInfo = weatherMap[code] || { text: "不明", icon: "🌈" };
 
-        document.getElementById('resultHeader').innerText = `${year}年${parseInt(month)}月${parseInt(day)}日(${dayOfWeek})\n${geo.currentName} 付近`;
+        document.getElementById('resultHeader').innerText = `${year}年${parseInt(month)}月${parseInt(day)}日(${dayOfWeek})\n${geo.displayName} 付近`;
         document.getElementById('weatherIcon').innerText = weatherInfo.icon;
         document.getElementById('weatherText').innerText = weatherInfo.text;
         document.getElementById('tempMax').innerText = `${maxTemp} ℃`;
         document.getElementById('tempMin').innerText = `${minTemp} ℃`;
         document.getElementById('precip').innerText = `${precip} mm`;
 
-        currentShareText = `私が生まれた日（${year}年${parseInt(month)}月${parseInt(day)}日(${dayOfWeek}) ${geo.currentName} 付近）の空模様は【${weatherInfo.text} ${weatherInfo.icon}】でした！\n(最高: ${maxTemp}℃ / 最低: ${minTemp}℃ / 降水量: ${precip}mm)\n\n#私が生まれた日の空模様\n${window.location.href}`;
+        currentShareText = `私が生まれた日（${year}年${parseInt(month)}月${parseInt(day)}日(${dayOfWeek}) ${geo.displayName} 付近）の空模様は【${weatherInfo.text} ${weatherInfo.icon}】でした！\n(最高: ${maxTemp}℃ / 最低: ${minTemp}℃ / 降水量: ${precip}mm)\n\n#私が生まれた日の空模様\n${window.location.href}`;
 
         resultCard.style.display = 'block';
 
@@ -641,11 +626,13 @@
       }
     });
 
+    // モーダル表示
     const infoModal = document.getElementById('infoModal');
     document.getElementById('infoBtn').addEventListener('click', () => { infoModal.style.display = 'flex'; });
     document.getElementById('modalCloseBtn').addEventListener('click', () => { infoModal.style.display = 'none'; });
     infoModal.addEventListener('click', (e) => { if (e.target === infoModal) infoModal.style.display = 'none'; });
 
+    // クリップボードフォールバック
     function fallbackCopyTextToClipboard(text) {
       const textArea = document.createElement("textarea");
       textArea.value = text;
@@ -657,6 +644,7 @@
       document.body.removeChild(textArea);
     }
 
+    // シェアボタン
     document.getElementById('shareBtn').addEventListener('click', async () => {
       const shareToast = document.getElementById('shareToast');
       shareToast.style.display = 'none';
