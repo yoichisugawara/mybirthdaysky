@@ -84,7 +84,6 @@
       color: #555;
     }
 
-    /* 日付選択UI */
     .date-selectors {
       display: flex;
       gap: 6px;
@@ -113,7 +112,6 @@
 
     select:focus, input:focus { border-color: var(--primary-color); }
 
-    /* サジェスト（候補リスト）UI */
     .suggest-list {
       position: absolute;
       top: 100%;
@@ -255,7 +253,6 @@
       line-height: 1.4;
     }
 
-    /* モーダル */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -346,7 +343,6 @@
     </div>
   </div>
 
-  <!-- インフォメーションモーダル -->
   <div id="infoModal" class="modal-overlay">
     <div class="modal-content">
       <h3>ℹ️ データ出典・使用技術について</h3>
@@ -354,11 +350,10 @@
       <br>
       <strong>【使用しているデータ・API】</strong>
       <ul>
-        <li><strong>歴史的地名検索:</strong> 農研機構「歴史的行政区域データセット API」（1920年代〜全国全市町村）</li>
-        <li><strong>現代地名検索:</strong> 国土地理院 ジオコーディングAPI</li>
+        <li><strong>地名・位置情報:</strong> 国土地理院 ジオコーディングAPI / Open-Meteo Geocoding</li>
         <li><strong>気象データ:</strong> <a href="https://open-meteo.com/" target="_blank">Open-Meteo Historical Weather API</a></li>
       </ul>
-      <p><small>※ 昭和・平成の大合併で消滅した旧市町村名を入力した場合も、歴史データベースから位置を自動判定します。</small></p>
+      <p><small>※ 昭和・平成の大合併等で消滅した旧市町村名や細かい地域名も自動検索されます。</small></p>
       <button type="button" class="modal-close-btn" id="modalCloseBtn">閉じる</button>
     </div>
   </div>
@@ -449,7 +444,6 @@
       }
     }
 
-    // 初期値設定
     eraSelect.value = 0;
     updateYears();
     yearSelect.value = 1974;
@@ -467,7 +461,22 @@
     const locationInput = document.getElementById('location');
     const suggestList = document.getElementById('suggestList');
 
-    // 地名サジェスト処理（国土地理院 ＋ 農研機構 歴史行政区域データ）
+    // JSON安全取得ヘルパー
+    async function safeFetchJson(url) {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) return null;
+        const contentType = res.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          return await res.json();
+        }
+      } catch (e) {
+        console.warn("Fetch Error:", e);
+      }
+      return null;
+    }
+
+    // サジェスト処理
     locationInput.addEventListener('input', () => {
       clearTimeout(searchDebounce);
       const rawQuery = locationInput.value.trim();
@@ -481,52 +490,44 @@
       searchDebounce = setTimeout(async () => {
         const results = [];
 
-        try {
-          // 1. 国土地理院 API (現行自治体・小地名)
-          const gsiRes = await fetch(`https://msearch.gsi.go.jp/address-search-api/msearch?q=${encodeURIComponent(rawQuery)}`);
-          const gsiData = await gsiRes.json();
-          if (gsiData && gsiData.length > 0) {
-            gsiData.slice(0, 4).forEach(item => {
-              const title = item.properties.title;
-              const [lon, lat] = item.geometry.coordinates;
-              results.push({
-                displayName: title,
-                subText: "現行地名",
-                currentName: title,
-                oldName: null,
-                lat: lat,
-                lon: lon
-              });
+        // 1. 国土地理院 API
+        const gsiData = await safeFetchJson(`https://msearch.gsi.go.jp/address-search-api/msearch?q=${encodeURIComponent(rawQuery)}`);
+        if (Array.isArray(gsiData)) {
+          gsiData.slice(0, 4).forEach(item => {
+            const title = item.properties.title;
+            const [lon, lat] = item.geometry.coordinates;
+            results.push({
+              displayName: title,
+              subText: "国土地理院 地名データ",
+              currentName: title,
+              lat: lat,
+              lon: lon
+            });
+          });
+        }
+
+        // 2. Open-Meteo ジオコーディングAPI (フォールバック)
+        if (results.length < 3) {
+          const omData = await safeFetchJson(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(rawQuery)}&count=5&language=ja&format=json`);
+          if (omData && omData.results) {
+            omData.results.forEach(item => {
+              const name = `${item.admin1 || ''} ${item.name}`.trim();
+              if (!results.some(r => r.displayName === name)) {
+                results.push({
+                  displayName: name,
+                  subText: "広域地名",
+                  currentName: name,
+                  lat: item.latitude,
+                  lon: item.longitude
+                });
+              }
             });
           }
+        }
 
-          // 2. 農研機構 歴史的行政区域データセット API (1920年〜全旧市町村)
-          const naroRes = await fetch(`https://aginfo.cgmk.jp/ws/hgis/NARO_LA_API.py?query=${encodeURIComponent(rawQuery)}&format=json`);
-          if (naroRes.ok) {
-            const naroData = await naroRes.json();
-            if (naroData && naroData.results) {
-              naroData.results.slice(0, 4).forEach(item => {
-                const name = `${item.pref}${item.county || ''}${item.city}`;
-                if (!results.some(r => r.displayName === name)) {
-                  results.push({
-                    displayName: name,
-                    subText: `歴史行政区域 (${item.valid_years || '旧地名'})`,
-                    currentName: name,
-                    oldName: name,
-                    lat: item.lat,
-                    lon: item.lon
-                  });
-                }
-              });
-            }
-          }
-
-        } catch (e) {}
-
-        // サジェスト描画
         if (results.length > 0) {
           suggestList.innerHTML = '';
-          results.slice(0, 6).forEach(res => {
+          results.forEach(res => {
             const div = document.createElement('div');
             div.className = 'suggest-item';
             div.innerHTML = `<strong>${res.displayName}</strong><span class="suggest-sub">${res.subText}</span>`;
@@ -578,12 +579,10 @@
       try {
         let geo = selectedGeoData;
 
-        // 選択せずに直接送信された場合
         if (!geo) {
-          // 1. 国土地理院API
-          const gsiRes = await fetch(`https://msearch.gsi.go.jp/address-search-api/msearch?q=${encodeURIComponent(inputText)}`);
-          const gsiData = await gsiRes.json();
-          if (gsiData && gsiData.length > 0) {
+          // 国土地理院 API 検索
+          const gsiData = await safeFetchJson(`https://msearch.gsi.go.jp/address-search-api/msearch?q=${encodeURIComponent(inputText)}`);
+          if (Array.isArray(gsiData) && gsiData.length > 0) {
             const [lon, lat] = gsiData[0].geometry.coordinates;
             geo = {
               currentName: gsiData[0].properties.title || inputText,
@@ -591,32 +590,28 @@
               lon: lon
             };
           } else {
-            // 2. 農研機構 歴史データAPI
-            const naroRes = await fetch(`https://aginfo.cgmk.jp/ws/hgis/NARO_LA_API.py?query=${encodeURIComponent(inputText)}&format=json`);
-            if (naroRes.ok) {
-              const naroData = await naroRes.json();
-              if (naroData && naroData.results && naroData.results.length > 0) {
-                const item = naroData.results[0];
-                geo = {
-                  currentName: `${item.pref}${item.county || ''}${item.city}`,
-                  lat: item.lat,
-                  lon: item.lon
-                };
-              }
+            // Open-Meteo Geocoding 検索
+            const omData = await safeFetchJson(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(inputText)}&count=1&language=ja&format=json`);
+            if (omData && omData.results && omData.results.length > 0) {
+              const item = omData.results[0];
+              geo = {
+                currentName: `${item.admin1 || ''} ${item.name}`.trim(),
+                lat: item.latitude,
+                lon: item.longitude
+              };
             }
           }
         }
 
         if (!geo) {
-          throw new Error('場所が見つかりませんでした。都道府県名も含めて入力してみてください。（例: 静岡県周智郡春野町、愛知県豊橋市）');
+          throw new Error('指定された場所が見つかりませんでした。都道府県名を含めて再入力してみてください。（例: 静岡県周智郡春野町、愛知県豊橋市）');
         }
 
-        // 天気データ取得 (Open-Meteo)
+        // 天気取得 (Open-Meteo Historical Weather API)
         const weatherUrl = `https://archive-api.open-meteo.com/v1/archive?latitude=${geo.lat}&longitude=${geo.lon}&start_date=${dateStr}&end_date=${dateStr}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Asia%2FTokyo`;
-        const weatherRes = await fetch(weatherUrl);
-        const weatherData = await weatherRes.json();
+        const weatherData = await safeFetchJson(weatherUrl);
 
-        if (!weatherData.daily || !weatherData.daily.weather_code) {
+        if (!weatherData || !weatherData.daily || !weatherData.daily.weather_code) {
           throw new Error('指定した日付の天気データが取得できませんでした。');
         }
 
@@ -646,13 +641,11 @@
       }
     });
 
-    // モーダル制御
     const infoModal = document.getElementById('infoModal');
     document.getElementById('infoBtn').addEventListener('click', () => { infoModal.style.display = 'flex'; });
     document.getElementById('modalCloseBtn').addEventListener('click', () => { infoModal.style.display = 'none'; });
     infoModal.addEventListener('click', (e) => { if (e.target === infoModal) infoModal.style.display = 'none'; });
 
-    // クリップボードコピー
     function fallbackCopyTextToClipboard(text) {
       const textArea = document.createElement("textarea");
       textArea.value = text;
