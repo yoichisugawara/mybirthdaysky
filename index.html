@@ -316,7 +316,7 @@
       </div>
 
       <div class="form-group">
-        <label for="location">生まれた場所（全国市区町村・旧地名）</label>
+        <label for="location">生まれた場所（日本全国の市区町村・旧地名）</label>
         <input type="text" id="location" placeholder="例: さかた、酒田市、龍山村、みさくぼ" autocomplete="off" required>
         <div id="suggestList" class="suggest-list"></div>
       </div>
@@ -354,10 +354,10 @@
       <br>
       <strong>【使用しているデータ・API】</strong>
       <ul>
-        <li><strong>気象データ:</strong> <a href="https://open-meteo.com/" target="_blank">Open-Meteo Historical Weather API</a>（過去の数値解析気象モデルデータ）</li>
-        <li><strong>地名・位置情報API:</strong> 国土地理院 ジオコーディングAPI / 全国自治体マスター</li>
+        <li><strong>気象データ:</strong> <a href="https://open-meteo.com/" target="_blank">Open-Meteo Historical Weather API</a></li>
+        <li><strong>地名・位置情報:</strong> 国土地理院 ジオコーディングAPI / Open-Meteo Geocoding API</li>
       </ul>
-      <p><small>※ 過去の合併前旧市町村名は、現在の行政区（都道府県・市区町村）に自動変換して検索・表示します。</small></p>
+      <p><small>※ 旧市町村名（合併前地名）で検索した場合、現在の対応する市区町村名を自動判定して併記・検索します。</small></p>
       <button type="button" class="modal-close-btn" id="modalCloseBtn">閉じる</button>
     </div>
   </div>
@@ -398,42 +398,23 @@
       { name: "西暦", startYear: 1940, endYear: 2026 }
     ];
 
-    // 日本全国の主要市町村・旧市町村（読み仮名付きマスター）
-    const locationMaster = [
-      // 山形県
-      { name: "山形県酒田市", kana: "さかたし", keywords: ["酒田", "さかた", "サカタ"], lat: 38.9144, lon: 139.8364 },
-      { name: "山形県山形市", kana: "やまがたし", keywords: ["山形", "やまがた"], lat: 38.2404, lon: 140.3633 },
-      { name: "山形県鶴岡市", kana: "つるおかし", keywords: ["鶴岡", "つるおか"], lat: 38.7297, lon: 139.8258 },
-      { name: "山形県米沢市", kana: "よねざわし", keywords: ["米沢", "よねざわ"], lat: 37.9222, lon: 140.1167 },
+    // 旧地名補正用マッピングテーブル（合併前の代表地名）
+    const legacyLocationAlias = {
+      "龍山村": { name: "静岡県浜松市天竜区龍山町", oldName: "静岡県磐田郡龍山村", lat: 34.9818, lon: 137.8222 },
+      "龍山": { name: "静岡県浜松市天竜区龍山町", oldName: "静岡県磐田郡龍山村", lat: 34.9818, lon: 137.8222 },
+      "たつやま": { name: "静岡県浜松市天竜区龍山町", oldName: "静岡県磐田郡龍山村", lat: 34.9818, lon: 137.8222 },
+      "水窪町": { name: "静岡県浜松市天竜区水窪町", oldName: "静岡県磐田郡水窪町", lat: 35.1633, lon: 137.8719 },
+      "水窪": { name: "静岡県浜松市天竜区水窪町", oldName: "静岡県磐田郡水窪町", lat: 35.1633, lon: 137.8719 },
+      "みさくぼ": { name: "静岡県浜松市天竜区水窪町", oldName: "静岡県磐田郡水窪町", lat: 35.1633, lon: 137.8719 },
+      "佐久間町": { name: "静岡県浜松市天竜区佐久間町", oldName: "静岡県磐田郡佐久間町", lat: 35.0862, lon: 137.8052 },
+      "さくま": { name: "静岡県浜松市天竜区佐久間町", oldName: "静岡県磐田郡佐久間町", lat: 35.0862, lon: 137.8052 },
+      "春野町": { name: "静岡県浜松市天竜区春野町", oldName: "静岡県周智郡春野町", lat: 34.9781, lon: 137.8925 },
+      "はるの": { name: "静岡県浜松市天竜区春野町", oldName: "静岡県周智郡春野町", lat: 34.9781, lon: 137.8925 }
+    };
 
-      // 静岡県・旧市町村
-      { name: "静岡県浜松市天竜区龍山町", oldName: "静岡県磐田郡龍山村", kana: "たつやま", keywords: ["龍山村", "龍山", "たつやま", "タツヤマ"], lat: 34.9818, lon: 137.8222 },
-      { name: "静岡県浜松市天竜区水窪町", oldName: "静岡県磐田郡水窪町", kana: "みさくぼ", keywords: ["水窪町", "水窪", "みさくぼ", "ミサクボ"], lat: 35.1633, lon: 137.8719 },
-      { name: "静岡県浜松市天竜区佐久間町", oldName: "静岡県磐田郡佐久間町", kana: "さくま", keywords: ["佐久間町", "佐久間", "さくま"], lat: 35.0862, lon: 137.8052 },
-      { name: "静岡県浜松市天竜区春野町", oldName: "静岡県周智郡春野町", kana: "はるの", keywords: ["春野町", "春野", "はるの"], lat: 34.9781, lon: 137.8925 },
-      { name: "静岡県浜松市中央区舞阪町", oldName: "静岡県浜名郡舞阪町", kana: "まいさか", keywords: ["舞阪", "まいさか"], lat: 34.6865, lon: 137.6105 },
-      { name: "静岡県浜松市中央区雄踏町", oldName: "静岡県浜名郡雄踏町", kana: "ゆうとう", keywords: ["雄踏", "ゆうとう"], lat: 34.7103, lon: 137.6433 },
-      { name: "静岡県浜松市浜名区細江町", oldName: "静岡県引佐郡細江町", kana: "ほそえ", keywords: ["細江", "ほそえ"], lat: 34.8056, lon: 137.6531 },
-      { name: "静岡県浜松市浜名区引佐町", oldName: "静岡県引佐郡引佐町", kana: "いなさ", keywords: ["引佐", "いなさ"], lat: 34.8461, lon: 137.6567 },
-      { name: "静岡県浜松市浜名区三ヶ日町", oldName: "静岡県引佐郡三ヶ日町", kana: "みっかび", keywords: ["三ヶ日", "三ケ日", "みっかび"], lat: 34.8000, lon: 137.5500 },
-      { name: "静岡県静岡市", kana: "しずおか", keywords: ["静岡", "しずおか"], lat: 34.9769, lon: 138.3831 },
-      { name: "静岡県浜松市", kana: "はままつ", keywords: ["浜松", "はままつ"], lat: 34.7108, lon: 137.7261 },
-      { name: "静岡県沼津市", kana: "ぬまづ", keywords: ["沼津", "ぬまづ"], lat: 35.1018, lon: 138.8598 },
-
-      // 主要都市サンプル（全国）
-      { name: "東京都新宿区", kana: "しんじゅく", keywords: ["新宿", "しんじゅく", "東京", "とうきょう"], lat: 35.6938, lon: 139.7034 },
-      { name: "大阪府大阪市", kana: "おおさか", keywords: ["大阪", "おおさか"], lat: 34.6937, lon: 135.5023 },
-      { name: "愛知県名古屋市", kana: "なごや", keywords: ["名古屋", "なごや"], lat: 35.1815, lon: 136.9064 },
-      { name: "北海道札幌市", kana: "さっぽろ", keywords: ["札幌", "さっぽろ"], lat: 43.0621, lon: 141.3544 },
-      { name: "福岡県福岡市", kana: "ふくおか", keywords: ["福岡", "ふくおか", "博多", "はかた"], lat: 33.5904, lon: 130.4017 }
-    ];
-
-    // ひらがな・カタカナ変換ヘルパー
+    // ひらがな・カタカナ相互変換
     function kataToHira(str) {
-      return str.replace(/[\u30a1-\u30f6]/g, function(match) {
-        var chr = match.charCodeAt(0) - 0x60;
-        return String.fromCharCode(chr);
-      });
+      return str.replace(/[\u30a1-\u30f6]/g, m => String.fromCharCode(m.charCodeAt(0) - 0x60));
     }
 
     const eraSelect = document.getElementById('eraSelect');
@@ -487,7 +468,7 @@
       }
     }
 
-    // 初期値設定
+    // 初期値（昭和49年2月13日）
     eraSelect.value = 0;
     updateYears();
     yearSelect.value = 1974;
@@ -500,83 +481,104 @@
     monthSelect.addEventListener('change', updateDays);
 
     let selectedGeoData = null;
+    let searchDebounce = null;
 
     const locationInput = document.getElementById('location');
     const suggestList = document.getElementById('suggestList');
 
-    // 全国サジェスト検索ロジック
-    locationInput.addEventListener('input', async () => {
+    // 動的サジェスト（全国の全市区町村・町名・ひらがな・カタカナ対応）
+    locationInput.addEventListener('input', () => {
+      clearTimeout(searchDebounce);
       const rawQuery = locationInput.value.trim();
-      const query = kataToHira(rawQuery.toLowerCase());
       selectedGeoData = null;
 
-      if (query.length < 1) {
+      if (rawQuery.length < 1) {
         suggestList.style.display = 'none';
         return;
       }
 
-      const results = [];
+      searchDebounce = setTimeout(async () => {
+        const results = [];
+        const hiraQuery = kataToHira(rawQuery);
 
-      // 1. マスター辞書から前方一致・部分一致検索（ひらがな・漢字対応）
-      locationMaster.forEach(item => {
-        const itemKana = kataToHira(item.kana.toLowerCase());
-        const isMatch = item.keywords.some(k => kataToHira(k.toLowerCase()).includes(query)) ||
-                        item.name.includes(rawQuery) ||
-                        itemKana.includes(query);
-
-        if (isMatch) {
-          results.push({
-            displayName: item.name,
-            subText: item.oldName ? `旧: ${item.oldName}` : "全国市町村マスター",
-            currentName: item.name,
-            oldName: item.oldName || null,
-            lat: item.lat,
-            lon: item.lon
-          });
+        // 1. 特殊な旧地名マッピング判定
+        for (const [key, val] of Object.entries(legacyLocationAlias)) {
+          if (key.includes(rawQuery) || key.includes(hiraQuery) || rawQuery.includes(key)) {
+            results.push({
+              displayName: val.name,
+              subText: `旧: ${val.oldName}`,
+              currentName: val.name,
+              oldName: val.oldName,
+              lat: val.lat,
+              lon: val.lon
+            });
+          }
         }
-      });
 
-      // 2. 国土地理院 API（全国のリアルタイム地名検索）
-      try {
-        const gsiRes = await fetch(`https://msearch.gsi.go.jp/address-search-api/msearch?q=${encodeURIComponent(rawQuery)}`);
-        const gsiData = await gsiRes.json();
-        if (gsiData && gsiData.length > 0) {
-          gsiData.slice(0, 5).forEach(item => {
-            const title = item.properties.title;
-            const [lon, lat] = item.geometry.coordinates;
-            
-            if (!results.some(r => r.displayName === title || r.currentName === title)) {
-              results.push({
-                displayName: title,
-                subText: "国土地理院 登録地名",
-                currentName: title,
-                oldName: null,
-                lat: lat,
-                lon: lon
+        // 2. 国土地理院 ジオコーディングAPI (日本全国対象)
+        try {
+          const gsiRes = await fetch(`https://msearch.gsi.go.jp/address-search-api/msearch?q=${encodeURIComponent(rawQuery)}`);
+          const gsiData = await gsiRes.json();
+          if (gsiData && gsiData.length > 0) {
+            gsiData.slice(0, 5).forEach(item => {
+              const title = item.properties.title;
+              const [lon, lat] = item.geometry.coordinates;
+              if (!results.some(r => r.displayName === title || r.currentName === title)) {
+                results.push({
+                  displayName: title,
+                  subText: "国土地理院 登録地名",
+                  currentName: title,
+                  oldName: null,
+                  lat: lat,
+                  lon: lon
+                });
+              }
+            });
+          }
+        } catch (e) {}
+
+        // 3. Open-Meteo Geocoding API (ひらがな・アルファベット・全国市区町村カバー補完)
+        if (results.length < 3) {
+          try {
+            const omRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(rawQuery)}&count=5&language=ja&format=json`);
+            const omData = await omRes.json();
+            if (omData && omData.results) {
+              omData.results.forEach(item => {
+                const fullName = `${item.admin1 || ''}${item.name}`.trim();
+                if (!results.some(r => r.displayName.includes(item.name) || item.name.includes(r.displayName))) {
+                  results.push({
+                    displayName: fullName,
+                    subText: `${item.admin1 || ''} ${item.country || '日本'}`,
+                    currentName: fullName,
+                    oldName: null,
+                    lat: item.latitude,
+                    lon: item.longitude
+                  });
+                }
               });
             }
-          });
+          } catch (e) {}
         }
-      } catch (e) {}
 
-      // サジェストリストの生成・描画
-      if (results.length > 0) {
-        suggestList.innerHTML = '';
-        results.slice(0, 6).forEach(res => {
-          const div = document.createElement('div');
-          div.className = 'suggest-item';
-          div.innerHTML = `<strong>${res.displayName}</strong><span class="suggest-sub">${res.subText}</span>`;
-          div.addEventListener('click', () => {
-            locationInput.value = res.oldName ? `${res.oldName}（現: ${res.displayName}）` : res.displayName;
-            selectedGeoData = res;
-            suggestList.style.display = 'none';
+        // 候補描画
+        if (results.length > 0) {
+          suggestList.innerHTML = '';
+          results.slice(0, 6).forEach(res => {
+            const div = document.createElement('div');
+            div.className = 'suggest-item';
+            div.innerHTML = `<strong>${res.displayName}</strong><span class="suggest-sub">${res.subText}</span>`;
+            div.addEventListener('click', () => {
+              locationInput.value = res.oldName ? `${res.oldName}（現: ${res.displayName}）` : res.displayName;
+              selectedGeoData = res;
+              suggestList.style.display = 'none';
+            });
+            suggestList.appendChild(div);
           });
-          suggestList.appendChild(div);
-        });
-        suggestList.style.display = 'block';
-      } else {
-        suggestList.style.display = 'none';
-      }
+          suggestList.style.display = 'block';
+        } else {
+          suggestList.style.display = 'none';
+        }
+      }, 250);
     });
 
     document.addEventListener('click', (e) => {
@@ -613,23 +615,18 @@
       try {
         let geo = selectedGeoData;
 
-        // 直接サジェストを選んでいない場合のフォールバック検索
+        // サジェスト非選択時の全国フォールバック検索
         if (!geo) {
-          const normInput = kataToHira(inputText.toLowerCase());
-          const matchedMaster = locationMaster.find(item => 
-            item.keywords.some(k => kataToHira(k.toLowerCase()) === normInput || inputText.includes(k)) ||
-            item.name.includes(inputText)
-          );
+          // 旧地名マッピング照合
+          for (const [key, val] of Object.entries(legacyLocationAlias)) {
+            if (inputText.includes(key)) {
+              geo = { currentName: val.name, oldName: val.oldName, lat: val.lat, lon: val.lon };
+              break;
+            }
+          }
 
-          if (matchedMaster) {
-            geo = {
-              currentName: matchedMaster.name,
-              oldName: matchedMaster.oldName || null,
-              lat: matchedMaster.lat,
-              lon: matchedMaster.lon
-            };
-          } else {
-            // 国土地理院APIで探す
+          if (!geo) {
+            // 国土地理院 API 検索
             const gsiRes = await fetch(`https://msearch.gsi.go.jp/address-search-api/msearch?q=${encodeURIComponent(inputText)}`);
             const gsiData = await gsiRes.json();
             if (gsiData && gsiData.length > 0) {
@@ -642,10 +639,25 @@
               };
             }
           }
+
+          if (!geo) {
+            // Open-Meteo API 検索
+            const omRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(inputText)}&count=1&language=ja&format=json`);
+            const omData = await omRes.json();
+            if (omData && omData.results && omData.results.length > 0) {
+              const item = omData.results[0];
+              geo = {
+                currentName: `${item.admin1 || ''}${item.name}`,
+                oldName: null,
+                lat: item.latitude,
+                lon: item.longitude
+              };
+            }
+          }
         }
 
         if (!geo) {
-          throw new Error('場所が見つかりませんでした。入力候補から選択するか、都道府県名を含めて入力してください。（例: 山形県酒田市、静岡県浜松市）');
+          throw new Error('場所が見つかりませんでした。入力欄の候補から選択するか、都道府県名も含めて入力してください。（例: 山形県酒田市、東京都新宿区）');
         }
 
         // 天気データ取得 (Open-Meteo)
@@ -664,7 +676,7 @@
 
         const weatherInfo = weatherMap[code] || { text: "不明", icon: "🌈" };
 
-        // 表記テキストの成形
+        // 表示テキストの生成（旧地名がある場合は明記）
         let locationDisplay = geo.currentName;
         if (geo.oldName && !geo.currentName.includes(geo.oldName)) {
           locationDisplay = `${geo.currentName}\n（旧: ${geo.oldName}）`;
@@ -675,7 +687,7 @@
           shareLocationText = `${geo.currentName} [旧: ${geo.oldName}]`;
         }
 
-        // 結果画面の描画
+        // 画面表示更新
         document.getElementById('resultHeader').innerText = `${year}年${parseInt(month)}月${parseInt(day)}日(${dayOfWeek})\n${locationDisplay} 付近`;
         document.getElementById('weatherIcon').innerText = weatherInfo.icon;
         document.getElementById('weatherText').innerText = weatherInfo.text;
@@ -683,7 +695,7 @@
         document.getElementById('tempMin').innerText = `${minTemp} ℃`;
         document.getElementById('precip').innerText = `${precip} mm`;
 
-        // SNS共有文面
+        // SNSシェア文面
         currentShareText = `私が生まれた日（${year}年${parseInt(month)}月${parseInt(day)}日(${dayOfWeek}) ${shareLocationText} 付近）の空模様は【${weatherInfo.text} ${weatherInfo.icon}】でした！\n(最高: ${maxTemp}℃ / 最低: ${minTemp}℃ / 降水量: ${precip}mm)\n\n#私が生まれた日の空模様\n${window.location.href}`;
 
         resultCard.style.display = 'block';
