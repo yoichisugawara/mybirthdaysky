@@ -92,7 +92,7 @@
       border-radius: 15px; border: 1px solid #d0e3ff;
     }
 
-    .result-date-location { font-size: 0.95rem; font-weight: bold; margin-bottom: 12px; line-height: 1.5; }
+    .result-date-location { font-size: 0.95rem; font-weight: bold; margin-bottom: 12px; line-height: 1.5; white-space: pre-wrap; }
     .weather-icon { font-size: 3.8rem; margin-bottom: 6px; }
     .weather-text { font-size: 1.3rem; font-weight: bold; color: var(--primary-color); margin-bottom: 16px; }
 
@@ -144,7 +144,7 @@
       <div class="form-group">
         <label for="location">生まれた場所（市区町村・町名）</label>
         <span class="label-hint">※候補が出たら該当する都道府県・市区町村を選択してください。</span>
-        <input type="text" id="location" placeholder="例: さいたま市、浜松市天竜区龍山町、黒森" autocomplete="off" required>
+        <input type="text" id="location" placeholder="例: さいたま市、浜松市天竜区、静岡市葵区" autocomplete="off" required>
         <div id="suggestList" class="suggest-list"></div>
       </div>
 
@@ -189,6 +189,8 @@
       2: { text: "一部曇り", icon: "⛅" },
       3: { text: "曇り", icon: "☁️" },
       45: { text: "霧", icon: "🌫️" },
+      48: { text: "霧氷", icon: "🌫️" },
+      51: { text: "霧雨", icon: "🌧️" },
       61: { text: "弱い雨", icon: "☔" },
       63: { text: "雨", icon: "☔" },
       65: { text: "強い雨", icon: "🌧️" },
@@ -204,7 +206,7 @@
       { name: "昭和", startYear: 1926, endYear: 1989 },
       { name: "平成", startYear: 1989, endYear: 2019 },
       { name: "令和", startYear: 2019, endYear: 2026 },
-      { name: "大正", startYear: 1912, endYear: 1926 },
+      { name: "大正", startYear: 1940, endYear: 1926 }, // Open-Meteo APIの対応範囲（1940年〜）に合わせて最小1940年
       { name: "西暦", startYear: 1940, endYear: 2026 }
     ];
 
@@ -222,7 +224,8 @@
     function updateYears() {
       const era = eras[eraSelect.value];
       yearSelect.innerHTML = '';
-      for (let y = era.startYear; y <= era.endYear; y++) {
+      const start = Math.max(1940, era.startYear); // APIの下限1940年に安全制御
+      for (let y = start; y <= era.endYear; y++) {
         const opt = document.createElement('option');
         opt.value = y;
         opt.innerText = era.name === "西暦" ? `${y}年` : `${era.name}${(y - era.startYear + 1) === 1 ? '元' : (y - era.startYear + 1)}年 (${y})`;
@@ -237,8 +240,8 @@
     }
 
     function updateDays() {
-      const year = parseInt(yearSelect.value);
-      const month = parseInt(monthSelect.value);
+      const year = parseInt(yearSelect.value) || 1974;
+      const month = parseInt(monthSelect.value) || 2;
       const daysInMonth = new Date(year, month, 0).getDate();
       const currentSelectedDay = parseInt(daySelect.value) || 1;
       daySelect.innerHTML = '';
@@ -265,7 +268,7 @@
 
     async function loadLocationDB() {
       try {
-        const res = await fetch('japan_locations.json');
+        const res = await fetch('./japan_locations.json');
         if (!res.ok) throw new Error('地名データベースの読み込みに失敗しました。');
         JAPAN_LOCATION_DB = await res.json();
       } catch (err) {
@@ -279,9 +282,12 @@
     const suggestList = document.getElementById('suggestList');
 
     function searchLocalGeocode(queryText) {
-      if (!queryText) return [];
+      if (!queryText || JAPAN_LOCATION_DB.length === 0) return [];
       const q = queryText.replace(/\s+/g, '').toLowerCase();
-      return JAPAN_LOCATION_DB.filter(item => item.name.replace(/\s+/g, '').toLowerCase().includes(q));
+      return JAPAN_LOCATION_DB.filter(item => {
+        if (!item || !item.name) return false;
+        return item.name.replace(/\s+/g, '').toLowerCase().includes(q);
+      });
     }
 
     locationInput.addEventListener('input', () => {
@@ -337,6 +343,8 @@
 
       try {
         let geo = selectedGeoData;
+        
+        // 候補から選択していない、あるいは直接打ち込んだ場合の判定強化
         if (!geo || geo.displayName !== inputText) {
           const searchResults = searchLocalGeocode(inputText);
           if (searchResults.length > 0) {
@@ -345,7 +353,7 @@
         }
 
         if (!geo) {
-          throw new Error('指定された場所が見つかりませんでした。候補リストに表示される名称を選択してください。');
+          throw new Error('指定された場所が見つかりませんでした。入力時に表示されるリストの候補を選択してください。');
         }
 
         const weatherUrl = `https://archive-api.open-meteo.com/v1/archive?latitude=${geo.lat}&longitude=${geo.lon}&start_date=${dateStr}&end_date=${dateStr}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Asia%2FTokyo`;
@@ -353,6 +361,10 @@
         if (!res.ok) throw new Error('天気データの取得に失敗しました。');
 
         const weatherData = await res.json();
+        if (!weatherData.daily || !weatherData.daily.weather_code) {
+          throw new Error('該当する日付の気象データが存在しませんでした。');
+        }
+
         const code = weatherData.daily.weather_code[0];
         const maxTemp = weatherData.daily.temperature_2m_max[0];
         const minTemp = weatherData.daily.temperature_2m_min[0];
