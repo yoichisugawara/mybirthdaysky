@@ -2,19 +2,18 @@ name: Generate Japan Locations JSON
 
 on:
   workflow_dispatch:
-  schedule:
-    # 毎月1日 0:00 (UTC) に定期更新
-    - cron: '0 0 1 * *'
+  push:
+    branches: [ main, master ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '20'
 
@@ -25,24 +24,26 @@ jobs:
 
           async function main() {
             console.log("Downloading municipality data...");
-            // CODH (ROIS) 提供の全国市区町村境界・位置データ（GeoJSON等）を利用
             const response = await fetch("https://raw.githubusercontent.com/Geolonia/japanese-addresses/main/data/api/ja.json");
+            if (!response.ok) throw new Error("Failed to download address data");
             const data = await response.json();
 
-            // 都道府県コード・市区町村コード順に整理して出力用オブジェクトを生成
-            const result = {};
+            let results = [];
 
             for (const prefName in data) {
-              result[prefName] = data[prefName].map(city => ({
-                code: city.code,
-                name: city.name,
-                lat: city.lat,
-                lng: city.lng
-              }));
+              if (Array.isArray(data[prefName])) {
+                data[prefName].forEach(city => {
+                  results.push({
+                    name: `${prefName} ${city.name}`,
+                    lat: city.lat,
+                    lon: city.lng
+                  });
+                });
+              }
             }
 
-            fs.writeFileSync("japan_locations.json", JSON.stringify(result, null, 2));
-            console.log("Successfully generated japan_locations.json!");
+            fs.writeFileSync("japan_locations.json", JSON.stringify(results, null, 2), "utf-8");
+            console.log(`Successfully generated ${results.length} locations!`);
           }
 
           main().catch(err => {
@@ -51,10 +52,10 @@ jobs:
           });
           '
 
-      - name: Commit and Push if changed
+      - name: Commit and Push
         run: |
-          git config local user.email "action@github.com"
-          git config local user.name "GitHub Action"
-          git status
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add japan_locations.json
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Update japan_locations.json [skip ci]" && git push)
+          git commit -m "Auto-generate full japan_locations.json" || exit 0
+          git push
