@@ -25,16 +25,19 @@ jobs:
           python3 -c '
           import urllib.request
           import json
+          import sys
 
-          # 全国の市区町村と正確な緯度経度が含まれているオープンデータ（Geoloniaの別エンドポイント または 国土地理院ベースのデータ）を取得
           url = "https://raw.githubusercontent.com/geolonia/japanese-addresses/master/data/latest.json"
           print("Downloading full address data with coordinates...")
-          req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
           
-          with urllib.request.urlopen(req) as response:
-              data = json.loads(response.read().decode("utf-8"))
+          try:
+              req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+              with urllib.request.urlopen(req, timeout=30) as response:
+                  data = json.loads(response.read().decode("utf-8"))
+          except Exception as e:
+              print(f"Error downloading data: {e}", file=sys.stderr)
+              sys.exit(1)
 
-          # アプリが使いやすいようにフラットな配列で、name, lat, lon を持たせる形に整形
           results = []
           for item in data:
               pref = item.get("pref", "")
@@ -44,7 +47,6 @@ jobs:
               
               if pref and city and lat is not None and lon is not None:
                   full_name = f"{pref} {city}"
-                  # 重複を防ぎつつ追加
                   results.append({
                       "name": full_name,
                       "lat": float(lat),
