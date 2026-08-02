@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>私が生まれた日の空模様</title>
+  <style>
+    :root {
+      --primary-color: #4a90e2;
+      --accent-color: #f5a623;
+      --bg-color: #f0f4f8;
+      --card-bg: #ffffff;
+      --text-color: #333333;
+      --sub-text: #666666;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      background-color: var(--card-bg);
+      width: 100%;
+      max-width: 480px;
+      padding: 30px 24px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      color: var(--primary-color);
+      margin-bottom: 8px;
+    }
+
+    p.subtitle {
+      font-size: 0.85rem;
+      color: var(--sub-text);
+      margin-bottom: 24px;
+    }
+
+    .form-group {
+      text-align: left;
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: bold;
+      margin-bottom: 6px;
+      color: #555;
+    }
+
+    input[type="date"],
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus {
+      border-color: var(--primary-color);
+    }
+
+    .btn-search {
+      width: 100%;
+      padding: 14px;
+      background-color: var(--primary-color);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+      margin-top: 10px;
+    }
+
+    .btn-search:hover {
+      background-color: #357abd;
+    }
+
+    .btn-search:active {
+      transform: scale(0.98);
+    }
+
+    .loading {
+      display: none;
+      margin-top: 20px;
+      font-size: 0.9rem;
+      color: var(--sub-text);
+    }
+
+    .result-card {
+      display: none;
+      margin-top: 24px;
+      padding: 20px;
+      background: linear-gradient(135deg, #e6f2ff 0%, #ffffff 100%);
+      border-radius: 15px;
+      border: 1px solid #d0e3ff;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-date-location {
+      font-size: 0.9rem;
+      font-weight: bold;
+      color: #555;
+      margin-bottom: 12px;
+    }
+
+    .weather-icon {
+      font-size: 4rem;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .weather-text {
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: var(--primary-color);
+      margin-bottom: 16px;
+    }
+
+    .temp-container {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 16px;
+      background-color: rgba(255, 255, 255, 0.7);
+      padding: 10px;
+      border-radius: 10px;
+    }
+
+    .temp-box {
+      font-size: 0.85rem;
+    }
+
+    .temp-box span {
+      display: block;
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+
+    .temp-max { color: #d9534f; }
+    .temp-min { color: #0275d8; }
+    .precip { color: #5bc0de; }
+
+    /* 汎用シェアボタン */
+    .btn-share {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px;
+      background-color: #25d366;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+
+    .btn-share:hover {
+      background-color: #1eb857;
+    }
+
+    .btn-share:active {
+      transform: scale(0.98);
+    }
+
+    .share-toast {
+      display: none;
+      margin-top: 8px;
+      font-size: 0.85rem;
+      color: #28a745;
+      font-weight: bold;
+    }
+
+    .error-msg {
+      display: none;
+      margin-top: 15px;
+      color: #d9534f;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>私が生まれた日の空模様</h1>
+    <p class="subtitle">あなたが生まれた日の天気と気温をお調べします</p>
+
+    <form id="weatherForm">
+      <div class="form-group">
+        <label for="birthdate">生年月日</label>
+        <input type="date" id="birthdate" required min="1940-01-01">
+      </div>
+
+      <div class="form-group">
+        <label for="location">生まれた場所（旧市町村名もOK）</label>
+        <input type="text" id="location" placeholder="例: 静岡県清水市、東京都新宿区" required>
+      </div>
+
+      <button type="submit" class="btn-search">空模様を見る ☀️</button>
+    </form>
+
+    <div id="loading" class="loading">過去の空の記憶を探しています...</div>
+    <div id="errorMsg" class="error-msg"></div>
+
+    <div id="resultCard" class="result-card">
+      <div id="resultHeader" class="result-date-location"></div>
+      <div id="weatherIcon" class="weather-icon">☀️</div>
+      <div id="weatherText" class="weather-text">晴れ</div>
+
+      <div class="temp-container">
+        <div class="temp-box">最高気温<span id="tempMax" class="temp-max">-- ℃</span></div>
+        <div class="temp-box">最低気温<span id="tempMin" class="temp-min">-- ℃</span></div>
+        <div class="temp-box">降水量<span id="precip" class="precip">-- mm</span></div>
+      </div>
+
+      <!-- 汎用シェアボタン -->
+      <button id="shareBtn" type="button" class="btn-share">
+        🔗 生まれた日の空模様をシェア
+      </button>
+      <div id="shareToast" class="share-toast">結果をクリップボードにコピーしました！</div>
+    </div>
+  </div>
+
+  <script>
+    // 天気コード（WMO Code）変換テーブル
+    const weatherMap = {
+      0: { text: "快晴", icon: "☀️" },
+      1: { text: "晴れ", icon: "🌤️" },
+      2: { text: "一部曇り", icon: "⛅" },
+      3: { text: "曇り", icon: "☁️" },
+      45: { text: "霧", icon: "🌫️" },
+      48: { text: "着氷性の霧", icon: "🌫️" },
+      51: { text: "霧雨", icon: "🌧️" },
+      53: { text: "時々霧雨", icon: "🌧️" },
+      55: { text: "強い霧雨", icon: "🌧️" },
+      61: { text: "弱い雨", icon: "☔" },
+      63: { text: "雨", icon: "☔" },
+      65: { text: "強い雨", icon: "🌧️" },
+      71: { text: "弱い雪", icon: "❄️" },
+      73: { text: "雪", icon: "❄️" },
+      75: { text: "強い雪", icon: "☃️" },
+      80: { text: "にわか雨", icon: "🌦️" },
+      81: { text: "強いにわか雨", icon: "🌧️" },
+      82: { text: "激しいにわか雨", icon: "⛈️" },
+      95: { text: "雷雨", icon: "⚡" },
+      96: { text: "雷雨（ひょうを伴う）", icon: "⛈️" },
+      99: { text: "激しい雷雨（ひょうを伴う）", icon: "⛈️" }
+    };
+
+    // 初期値設定（今日の日付を最大値に制限）
+    const birthdateInput = document.getElementById('birthdate');
+    const today = new Date().toISOString().split('T')[0];
+    birthdateInput.setAttribute('max', today);
+
+    // シェア用の文章を保持する変数
+    let currentShareText = '';
+
+    document.getElementById('weatherForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const date = birthdateInput.value;
+      const locationText = document.getElementById('location').value.trim();
+
+      const loading = document.getElementById('loading');
+      const errorMsg = document.getElementById('errorMsg');
+      const resultCard = document.getElementById('resultCard');
+      const shareToast = document.getElementById('shareToast');
+
+      loading.style.display = 'block';
+      errorMsg.style.display = 'none';
+      resultCard.style.display = 'none';
+      shareToast.style.display = 'none';
+
+      try {
+        // 1. 地名から緯度・経度を取得 (Geocoding API)
+        let geocodeRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(locationText)}&count=1&language=ja&format=json`);
+        let geocodeData = await geocodeRes.json();
+
+        // フォールバック検索
+        if (!geocodeData.results || geocodeData.results.length === 0) {
+          geocodeRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent('日本 ' + locationText)}&count=1&language=ja&format=json`);
+          geocodeData = await geocodeRes.json();
+        }
+
+        if (!geocodeData.results || geocodeData.results.length === 0) {
+          throw new Error('場所が見つかりませんでした。都道府県名を含めて入力してみてください。');
+        }
+
+        const location = geocodeData.results[0];
+        const lat = location.latitude;
+        const lon = location.longitude;
+
+        // 2. 過去天気データ取得 (Historical Weather API)
+        const weatherUrl = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${date}&end_date=${date}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Asia%2FTokyo`;
+        const weatherRes = await fetch(weatherUrl);
+        const weatherData = await weatherRes.json();
+
+        if (!weatherData.daily || !weatherData.daily.weather_code) {
+          throw new Error('指定した日付の天気データが取得できませんでした。');
+        }
+
+        // データの抽出
+        const code = weatherData.daily.weather_code[0];
+        const maxTemp = weatherData.daily.temperature_2m_max[0];
+        const minTemp = weatherData.daily.temperature_2m_min[0];
+        const precip = weatherData.daily.precipitation_sum[0];
+
+        const weatherInfo = weatherMap[code] || { text: "不明", icon: "🌈" };
+
+        // 3. 結果表示の更新
+        const [year, month, day] = date.split('-');
+        document.getElementById('resultHeader').innerText = `${year}年${parseInt(month)}月${parseInt(day)}日  ${locationText} 付近`;
+        document.getElementById('weatherIcon').innerText = weatherInfo.icon;
+        document.getElementById('weatherText').innerText = weatherInfo.text;
+        document.getElementById('tempMax').innerText = `${maxTemp} ℃`;
+        document.getElementById('tempMin').innerText = `${minTemp} ℃`;
+        document.getElementById('precip').innerText = `${precip} mm`;
+
+        // シェア用テキストのセット
+        currentShareText = `私が生まれた日（${year}年${parseInt(month)}月${parseInt(day)}日）の空模様は【${weatherInfo.text} ${weatherInfo.icon}】でした！\n(最高: ${maxTemp}℃ / 最低: ${minTemp}℃)\n\n#私が生まれた日の空模様\n${window.location.href}`;
+
+        resultCard.style.display = 'block';
+
+      } catch (err) {
+        errorMsg.innerText = err.message || '通信エラーが発生しました。時間を置いて再度お試しください。';
+        errorMsg.style.display = 'block';
+      } finally {
+        loading.style.display = 'none';
+      }
+    });
+
+    // 確実にテキストをコピーするフォールバック関数
+    function fallbackCopyTextToClipboard(text) {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.top = "0";
+      textArea.style.left = "0";
+      textArea.style.opacity = "0";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+      } catch (err) {
+        console.error('Fallback copy failed', err);
+      }
+      document.body.removeChild(textArea);
+    }
+
+    // シェアボタン押下時のイベント（安全処理）
+    document.getElementById('shareBtn').addEventListener('click', async () => {
+      const shareToast = document.getElementById('shareToast');
+      shareToast.style.display = 'none';
+
+      let sharedSuccess = false;
+
+      // 1. Web Share API を試行
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: '私が生まれた日の空模様',
+            text: currentShareText
+          });
+          sharedSuccess = true;
+        } catch (err) {
+          // ユーザーのキャンセル、または非対応環境エラーは無視してコピーへ流す
+        }
+      }
+
+      // 2. Share APIで共有されなかった場合、クリップボードへのコピーを試行
+      if (!sharedSuccess) {
+        if (navigator.clipboard && window.isSecureContext) {
+          try {
+            await navigator.clipboard.writeText(currentShareText);
+            shareToast.style.display = 'block';
+          } catch (err) {
+            fallbackCopyTextToClipboard(currentShareText);
+            shareToast.style.display = 'block';
+          }
+        } else {
+          fallbackCopyTextToClipboard(currentShareText);
+          shareToast.style.display = 'block';
+        }
+      }
+    });
+  </script>
+</body>
+</html>
