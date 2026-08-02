@@ -235,8 +235,8 @@
       </div>
 
       <div class="form-group">
-        <label for="location">生まれた場所（市区町村名など）</label>
-        <input type="text" id="location" placeholder="例: 静岡県浜松市、名古屋市、清水市" required>
+        <label for="location">生まれた場所（都道府県、市町村名など）</label>
+        <input type="text" id="location" placeholder="例: 静岡県浜松市、浜松、静岡、清水区" required>
       </div>
 
       <button type="submit" class="btn-search">空模様を見る ☀️</button>
@@ -294,58 +294,52 @@
 
     let currentShareText = '';
 
-    // 柔軟なマルチステップ地名検索（国土地理院 ➔ Open-Meteo ➔ 部分一致フォールバック）
+    // 表記ゆれに極めて強いマルチジオコーディング処理
     async function getCoordinates(query) {
-      let cleanQuery = query.trim();
+      let rawQuery = query.trim();
 
-      // 1. 国土地理院 API でそのまま検索
-      try {
-        const gsiRes = await fetch(`https://msearch.gsi.go.jp/address-search-api/msearch?q=${encodeURIComponent(cleanQuery)}`);
-        const gsiData = await gsiRes.json();
-        if (gsiData && gsiData.length > 0 && gsiData[0].geometry) {
-          const [lon, lat] = gsiData[0].geometry.coordinates;
-          return { lat, lon, name: gsiData[0].properties.title || cleanQuery };
-        }
-      } catch (e) {
-        console.warn("GSI primary search failed", e);
+      // 検索クエリのバリエーション（例：「静岡県浜松市」➔ [「静岡県浜松市」, 「浜松市」, 「浜松」]）
+      const searchTerms = [rawQuery];
+      
+      // 「県」「府」「都」を外したパターンを追加
+      let cleanQuery = rawQuery.replace(/(東京都|大阪府|京都府|.+?県)/, '');
+      if (cleanQuery && cleanQuery !== rawQuery) searchTerms.push(cleanQuery);
+
+      // 「市」「区」「町」「村」を外したパターンを追加
+      let shortQuery = cleanQuery.replace(/(市|区|町|村)$/, '');
+      if (shortQuery && shortQuery !== cleanQuery) searchTerms.push(shortQuery);
+
+      // 1. Open-Meteo ジオコーディング (最も日本語の柔軟な略称・市表記に対応)
+      for (let term of searchTerms) {
+        try {
+          const omRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(term)}&count=5&language=ja&format=json`);
+          const omData = await omRes.json();
+          if (omData.results && omData.results.length > 0) {
+            const jpResult = omData.results.find(r => r.country_code === 'JP' || r.country === 'Japan') || omData.results[0];
+            return { lat: jpResult.latitude, lon: jpResult.longitude, name: rawQuery };
+          }
+        } catch (e) {}
       }
 
-      // 2. もし細かい町名や旧地名で失敗した場合、市町村名やメインの部分だけに削って再トライ
-      // 例: 「静岡県浜松市天竜区水窪町」→「浜松市天竜区」や「天竜区」などで再挑戦
-      const parts = cleanQuery.split(/[\s,，、]+/);
-      for (let part of parts) {
-        if (part.length >= 2 && part !== cleanQuery) {
-          try {
-            const gsiRes2 = await fetch(`https://msearch.gsi.go.jp/address-search-api/msearch?q=${encodeURIComponent(part)}`);
-            const gsiData2 = await gsiRes2.json();
-            if (gsiData2 && gsiData2.length > 0 && gsiData2[0].geometry) {
-              const [lon, lat] = gsiData2[0].geometry.coordinates;
-              return { lat, lon, name: gsiData2[0].properties.title || part };
-            }
-          } catch (e) {}
-        }
+      // 2. 国土地理院 API
+      for (let term of searchTerms) {
+        try {
+          const gsiRes = await fetch(`https://msearch.gsi.go.jp/address-search-api/msearch?q=${encodeURIComponent(term)}`);
+          const gsiData = await gsiRes.json();
+          if (gsiData && gsiData.length > 0 && gsiData[0].geometry) {
+            const [lon, lat] = gsiData[0].geometry.coordinates;
+            return { lat, lon, name: rawQuery };
+          }
+        } catch (e) {}
       }
 
-      // 3. Open-Meteo ジオコーディングAPI (日本語)
+      // 3. 最終手段: 「Japan + キーワード」で検索
       try {
-        const omRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cleanQuery)}&count=5&language=ja&format=json`);
-        const omData = await omRes.json();
-        if (omData.results && omData.results.length > 0) {
-          // 日本国内の結果を優先的に探す
-          const jpResult = omData.results.find(r => r.country_code === 'JP' || r.country === 'Japan') || omData.results[0];
-          return { lat: jpResult.latitude, lon: jpResult.longitude, name: jpResult.name };
-        }
-      } catch (e) {
-        console.warn("Open-Meteo search failed", e);
-      }
-
-      // 4. 最後の手段：Open-Meteoに「Japan + クエリ」で投げる
-      try {
-        const omRes2 = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent('Japan ' + cleanQuery)}&count=1&language=ja&format=json`);
+        const omRes2 = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent('Japan ' + rawQuery)}&count=1&language=ja&format=json`);
         const omData2 = await omRes2.json();
         if (omData2.results && omData2.results.length > 0) {
           const res = omData2.results[0];
-          return { lat: res.latitude, lon: res.longitude, name: res.name };
+          return { lat: res.latitude, lon: res.longitude, name: rawQuery };
         }
       } catch (e) {}
 
@@ -372,7 +366,7 @@
         const geoResult = await getCoordinates(locationText);
 
         if (!geoResult) {
-          throw new Error('場所が見つかりませんでした。「静岡県浜松市」や「名古屋市」のように大きな行政区画を含めて入力してみてください。');
+          throw new Error('場所が見つかりませんでした。別の名称（例: 浜松、静岡市、東京都など）でお試しください。');
         }
 
         // 過去天気データ取得（Open-Meteo Archive API）
@@ -392,14 +386,14 @@
         const weatherInfo = weatherMap[code] || { text: "不明", icon: "🌈" };
 
         const [year, month, day] = date.split('-');
-        document.getElementById('resultHeader').innerText = `${year}年${parseInt(month)}月${parseInt(day)}日  ${geoResult.name} 付近`;
+        document.getElementById('resultHeader').innerText = `${year}年${parseInt(month)}月${parseInt(day)}日  ${locationText} 付近`;
         document.getElementById('weatherIcon').innerText = weatherInfo.icon;
         document.getElementById('weatherText').innerText = weatherInfo.text;
         document.getElementById('tempMax').innerText = `${maxTemp} ℃`;
         document.getElementById('tempMin').innerText = `${minTemp} ℃`;
         document.getElementById('precip').innerText = `${precip} mm`;
 
-        currentShareText = `私が生まれた日（${year}年${parseInt(month)}月${parseInt(day)}日 ${geoResult.name} 付近）の空模様は【${weatherInfo.text} ${weatherInfo.icon}】でした！\n(最高: ${maxTemp}℃ / 最低: ${minTemp}℃ / 降水量: ${precip}mm)\n\n#私が生まれた日の空模様\n${window.location.href}`;
+        currentShareText = `私が生まれた日（${year}年${parseInt(month)}月${parseInt(day)}日 ${locationText} 付近）の空模様は【${weatherInfo.text} ${weatherInfo.icon}】でした！\n(最高: ${maxTemp}℃ / 最低: ${minTemp}℃ / 降水量: ${precip}mm)\n\n#私が生まれた日の空模様\n${window.location.href}`;
 
         resultCard.style.display = 'block';
 
