@@ -1,0 +1,40 @@
+name: Build Japan Locations JSON
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download and process address data
+        run: |
+          curl -sL https://raw.githubusercontent.com/geolonia/japanese-addresses/main/data/latest.csv -o data.csv
+          python3 -c "
+          import csv, json
+          res = []
+          with open('data.csv', 'r', encoding='utf-8') as f:
+              reader = csv.DictReader(f)
+              for row in reader:
+                  pref = row.get('pref', '')
+                  city = row.get('city', '')
+                  town = row.get('town', '')
+                  lat = float(row.get('lat', 0))
+                  lon = float(row.get('lng', 0))
+                  name = f'{pref} {city} {town}'.strip()
+                  res.append({'name': name, 'lat': round(lat, 4), 'lon': round(lon, 4)})
+          with open('japan_locations.json', 'w', encoding='utf-8') as f:
+              json.dump(res, f, ensure_ascii=False, separators=(',', ':'))
+          "
+
+      - name: Commit and Push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add japan_locations.json
+          git commit -m "Auto-generate full japan_locations.json" || exit 0
+          git push
