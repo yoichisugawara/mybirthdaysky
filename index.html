@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>私が生まれた日の空模様</title>
 
-  <!-- ファビコン（404エラー防止） -->
+  <!-- ファビコン（404エラー防止・絵文字アイコン） -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☀️</text></svg>">
 
   <!-- Google アナリティクス (GA4) ※ご自身のIDに書き換えてください -->
@@ -152,7 +152,7 @@
         </div>
       </div>
 
-      <!-- 地方選択（ファイル名と完全一致：u無しの形式に対応） -->
+      <!-- 地方選択（GitHub上のファイル表記と自動照合） -->
       <div class="form-group">
         <label>出生地の地方</label>
         <select id="regionSelect" required>
@@ -196,7 +196,7 @@
       <div class="modal-body-text">
         <h4>1. フォームに入力</h4>
         <p>地方を選択すると、その地方の市区町村データが読み込まれ、入力欄に候補がサジェストされます。</p>
-        <h4>2. 空模様を検索</h4>
+        <h4 style="margin-top: 10px;">2. 空模様を検索</h4>
         <p>「空模様を検索する」ボタンを押すと、該当する位置情報から当時の詳細な天気を再現します。</p>
       </div>
       <button type="button" class="btn-modal-close" onclick="closeModal('usageModal')">閉じる</button>
@@ -259,6 +259,7 @@
   </div>
 
   <script>
+    // 和暦計算関数
     function getWareki(year) {
       if (year >= 2019) return `令和${year - 2018 === 1 ? '元' : year - 2018}年`;
       if (year >= 1989) return `平成${year - 1988 === 1 ? '元' : year - 1988}年`;
@@ -281,13 +282,12 @@
 
     let cityDataList = [];
 
-    // 地方JSONの読み込み（フォールバック機能付き）
+    // 地方JSONの自動読み込み（uあり・なしのファイル名に自動対応）
     async function loadRegionJson(regionKey) {
       const statusMsg = document.getElementById('statusMsg');
       statusMsg.className = 'status-msg';
       statusMsg.innerText = '市区町村データを読み込み中...';
 
-      // 候補パス（uあり・uなしの両方を自動試行）
       const possiblePaths = [
         `./${regionKey}.json`,
         `./${regionKey.replace('kanto', 'kantou').replace('tohoku', 'touhoku')}.json`
@@ -311,7 +311,8 @@
           datalist.innerHTML = '';
           
           cityDataList.forEach(item => {
-            const cityName = item.city || item.name || item.cityName;
+            // "name" または "city" プロパティを判定してサジェストに設定
+            const cityName = item.name || item.city || item.cityName;
             if (cityName) {
               const opt = document.createElement('option');
               opt.value = cityName;
@@ -384,11 +385,12 @@
     document.getElementById('btnAbout').addEventListener('click', () => openModal('aboutModal'));
     document.getElementById('openShareModalBtn').addEventListener('click', () => openModal('shareModal'));
 
+    // フォーム送信（検索実行）
     document.getElementById('weatherForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const cityInputVal = document.getElementById('cityInput').value.trim();
-      const matchedCity = cityDataList.find(item => (item.city || item.name || item.cityName) === cityInputVal);
+      const matchedCity = cityDataList.find(item => (item.name || item.city || item.cityName) === cityInputVal);
       
       if (!matchedCity) {
         alert('候補リストに存在する正しい市区町村名を入力・選択してください。');
@@ -422,7 +424,7 @@
           const code = data.daily.weather_code[0];
           const weatherInfo = getWeatherLabel(code);
           const warekiStr = getWareki(parseInt(year));
-          const cityName = matchedCity.city || matchedCity.name || matchedCity.cityName;
+          const cityName = matchedCity.name || matchedCity.city || matchedCity.cityName;
 
           currentData = {
             year, month: monthSelect.value, day: daySelect.value,
@@ -433,7 +435,7 @@
           };
 
           const warekiDisp = warekiStr ? `（${warekiStr}）` : '';
-          document.getElementById('resDateLoc').innerText = `${year}年${warekiDisp}${monthSelect.value}月${daySelect.value}日（${regionText} ${cityName}）`;
+          document.getElementById('resDateLoc').innerText = `${year}年${warekiDisp}${monthSelect.value}月${daySelect.value}日（${cityName}）`;
           document.getElementById('resWeather').innerText = weatherInfo.text;
           document.getElementById('resTemps').innerText = `最高 ${maxTemp}℃ / 最低 ${minTemp}℃`;
           document.getElementById('resDetails').innerText = `降水量: ${precip}mm / 最大風速: ${wind}m/s`;
@@ -447,6 +449,7 @@
       }
     });
 
+    // シェア用テキストの作成
     function buildShareText() {
       if (!currentData) return '';
       const level = document.querySelector('input[name="privacyLevel"]:checked').value;
@@ -461,7 +464,7 @@
         body = `${currentData.month}月${currentData.day}日生まれ（${currentData.region}）の私が生まれた日の空は【${currentData.weatherText}】最高${currentData.maxTemp}℃でした！`;
       } else {
         const warekiDisp = currentData.wareki ? `(${currentData.wareki})` : '';
-        body = `${currentData.year}年${warekiDisp}${currentData.month}月${currentData.day}日 ${currentData.region}${currentData.city}で生まれた日の空模様は【${currentData.weatherText}】最高${currentData.maxTemp}℃ / 最低${currentData.minTemp}℃ / 降水量${currentData.precip}mm / 最大風速${currentData.wind}m/s でした！`;
+        body = `${currentData.year}年${warekiDisp}${currentData.month}月${currentData.day}日 ${currentData.city}で生まれた日の空模様は【${currentData.weatherText}】最高${currentData.maxTemp}℃ / 最低${currentData.minTemp}℃ / 降水量${currentData.precip}mm / 最大風速${currentData.wind}m/s でした！`;
       }
       return `${body}\n#私が生まれた日の空模様\n${appUrl}`;
     }
