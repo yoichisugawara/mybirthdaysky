@@ -63,7 +63,7 @@
       padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; cursor: pointer;
     }
 
-    .form-group { margin-bottom: 16px; }
+    .form-group { margin-bottom: 16px; position: relative; }
     label { display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px; }
 
     select, input[type="text"] {
@@ -72,6 +72,37 @@
     }
 
     .form-row { display: flex; gap: 8px; }
+
+    /* iOS対応カスタムサジェストドロップダウン */
+    .suggest-dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      max-height: 200px;
+      overflow-y: auto;
+      background: #ffffff;
+      border: 1px solid #bae6fd;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+      margin-top: 4px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .suggest-item {
+      padding: 12px 16px;
+      font-size: 0.95rem;
+      border-bottom: 1px solid #f1f5f9;
+      cursor: pointer;
+      color: var(--text-color);
+    }
+    .suggest-item:last-child { border-bottom: none; }
+    .suggest-item:active, .suggest-item:hover {
+      background-color: #e0f2fe;
+      color: #0369a1;
+      font-weight: bold;
+    }
 
     .status-msg {
       font-size: 0.75rem;
@@ -152,7 +183,7 @@
         </div>
       </div>
 
-      <!-- 地方選択（GitHub上のファイル表記と自動照合） -->
+      <!-- 地方選択 -->
       <div class="form-group">
         <label>出生地の地方</label>
         <select id="regionSelect" required>
@@ -167,10 +198,11 @@
         </select>
       </div>
 
-      <!-- サジェスト付き市区町村入力 -->
+      <!-- サジェスト付き市区町村入力（全端末共通カスタムドロップダウン） -->
       <div class="form-group">
         <label>市区町村名（入力または選択）</label>
-<input type="text" id="cityInput" list="cityDatalist" placeholder="タップまたは文字入力で選択" autocomplete="on" autocomplete="list" placeholder="選択してください" required />        <datalist id="cityDatalist"></datalist>
+        <input type="text" id="cityInput" placeholder="タップして一覧表示・検索" autocomplete="off" required />
+        <div id="suggestDropdown" class="suggest-dropdown"></div>
         <div id="statusMsg" class="status-msg">データ読み込み中...</div>
       </div>
 
@@ -194,7 +226,7 @@
       <div class="modal-title">📖 使い方</div>
       <div class="modal-body-text">
         <h4>1. フォームに入力</h4>
-        <p>地方を選択すると、その地方の市区町村データが読み込まれ、入力欄に候補がサジェストされます。</p>
+        <p>地方を選択し、市区町村名欄をタップすると候補一覧が表示されます。入力して絞り込むこともできます。</p>
         <h4 style="margin-top: 10px;">2. 空模様を検索</h4>
         <p>「空模様を検索する」ボタンを押すと、該当する位置情報から当時の詳細な天気を再現します。</p>
       </div>
@@ -258,7 +290,6 @@
   </div>
 
   <script>
-    // 和暦計算関数
     function getWareki(year) {
       if (year >= 2019) return `令和${year - 2018 === 1 ? '元' : year - 2018}年`;
       if (year >= 1989) return `平成${year - 1988 === 1 ? '元' : year - 1988}年`;
@@ -280,8 +311,10 @@
     for (let d = 1; d <= 31; d++) daySelect.add(new Option(`${d}日`, d));
 
     let cityDataList = [];
+    const cityInput = document.getElementById('cityInput');
+    const suggestDropdown = document.getElementById('suggestDropdown');
 
-    // 地方JSONの自動読み込み（uあり・なしのファイル名に自動対応）
+    // 地方JSONの読み込み
     async function loadRegionJson(regionKey) {
       const statusMsg = document.getElementById('statusMsg');
       statusMsg.className = 'status-msg';
@@ -306,19 +339,6 @@
       if (response) {
         try {
           cityDataList = await response.json();
-          const datalist = document.getElementById('cityDatalist');
-          datalist.innerHTML = '';
-          
-          cityDataList.forEach(item => {
-            // "name" または "city" プロパティを判定してサジェストに設定
-            const cityName = item.name || item.city || item.cityName;
-            if (cityName) {
-              const opt = document.createElement('option');
-              opt.value = cityName;
-              datalist.appendChild(opt);
-            }
-          });
-
           statusMsg.innerText = `✓ ${cityDataList.length}件の市区町村候補を読み込みました`;
         } catch (e) {
           statusMsg.className = 'status-msg error';
@@ -330,28 +350,61 @@
       }
     }
 
+    // サジェストリストの生成＆表示関数（iOS/Android/PC対応）
+    function renderSuggest(filterText = '') {
+      suggestDropdown.innerHTML = '';
+      const text = filterText.trim().toLowerCase();
+
+      const filtered = cityDataList.filter(item => {
+        const name = item.name || item.city || item.cityName || '';
+        return name.toLowerCase().includes(text);
+      });
+
+      if (filtered.length === 0) {
+        suggestDropdown.style.display = 'none';
+        return;
+      }
+
+      filtered.forEach(item => {
+        const name = item.name || item.city || item.cityName;
+        const div = document.createElement('div');
+        div.className = 'suggest-item';
+        div.innerText = name;
+        
+        // タップ/クリック時に入力欄に値をセット
+        div.addEventListener('mousedown', (e) => {
+          e.preventDefault(); // フォーカス外れを防止
+          cityInput.value = name;
+          suggestDropdown.style.display = 'none';
+        });
+
+        suggestDropdown.appendChild(div);
+      });
+
+      suggestDropdown.style.display = 'block';
+    }
+
+    // 入力欄にフォーカスした時＆文字入力した時の処理
+    cityInput.addEventListener('focus', () => renderSuggest(cityInput.value));
+    cityInput.addEventListener('input', () => renderSuggest(cityInput.value));
+
+    // 外側をタップした時にリストを閉じる
+    document.addEventListener('click', (e) => {
+      if (!cityInput.contains(e.target) && !suggestDropdown.contains(e.target)) {
+        suggestDropdown.style.display = 'none';
+      }
+    });
+
     const regionSelect = document.getElementById('regionSelect');
     regionSelect.addEventListener('change', (e) => {
-      document.getElementById('cityInput').value = '';
+      cityInput.value = '';
+      suggestDropdown.style.display = 'none';
       loadRegionJson(e.target.value);
     });
 
     // 初期ロード
     loadRegionJson(regionSelect.value);
 
-    const cityInput = document.getElementById('cityInput');
-
-// スマホでタップ（フォーカス）したときに、入力が空でも候補を表示させる（iOS/Android対策）
-cityInput.addEventListener('focus', () => {
-  // 一瞬値を空にして再認識させることでスマホのdatalist表示を呼び出す
-  cityInput.setAttribute('placeholder', '検索ワードを入力...');
-});
-
-// スマホキーボードで「開く/次へ」を押した際の利便性向上
-cityInput.addEventListener('touchstart', () => {
-  cityInput.focus();
-});
-    
     let currentData = null;
 
     const weatherMap = {
@@ -401,7 +454,7 @@ cityInput.addEventListener('touchstart', () => {
     document.getElementById('weatherForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const cityInputVal = document.getElementById('cityInput').value.trim();
+      const cityInputVal = cityInput.value.trim();
       const matchedCity = cityDataList.find(item => (item.name || item.city || item.cityName) === cityInputVal);
       
       if (!matchedCity) {
