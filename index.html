@@ -6,13 +6,14 @@
   <title>私が生まれた日の空模様</title>
   <style>
     :root {
-      --primary-color: #3b82f6;
-      --primary-hover: #2563eb;
-      --bg-color: #f8fafc;
+      --primary-color: #0284c7;
+      --primary-hover: #0369a1;
+      --accent-color: #e0f2fe;
+      --bg-color: #f0f9ff;
       --card-bg: #ffffff;
-      --text-color: #1e293b;
-      --text-sub: #64748b;
-      --border-color: #e2e8f0;
+      --text-color: #0f172a;
+      --text-sub: #475569;
+      --border-color: #bae6fd;
     }
 
     * {
@@ -23,10 +24,10 @@
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background-color: var(--bg-color);
+      background: linear-gradient(180deg, #e0f2fe 0%, #f0f9ff 100%);
       color: var(--text-color);
       line-height: 1.6;
-      padding: 20px;
+      padding: 20px 12px;
       display: flex;
       justify-content: center;
       align-items: flex-start;
@@ -35,27 +36,58 @@
 
     .container {
       width: 100%;
-      max-width: 500px;
+      max-width: 480px;
       background: var(--card-bg);
-      border-radius: 20px;
-      padding: 24px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      border-radius: 24px;
+      padding: 24px 20px;
+      box-shadow: 0 10px 30px rgba(2, 132, 199, 0.12);
+      border: 1px solid #e0f2fe;
     }
 
-    h1 {
-      font-size: 1.5rem;
+    /* ヘッダー＆メニューエリア */
+    .header {
       text-align: center;
-      margin-bottom: 8px;
-      color: var(--text-color);
+      margin-bottom: 20px;
+    }
+
+    .app-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #0369a1;
+      margin-bottom: 4px;
+      letter-spacing: -0.02em;
     }
 
     .subtitle {
-      font-size: 0.9rem;
-      text-align: center;
+      font-size: 0.85rem;
       color: var(--text-sub);
-      margin-bottom: 24px;
+      margin-bottom: 16px;
     }
 
+    .nav-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .nav-btn {
+      background: #f0f9ff;
+      color: #0284c7;
+      border: 1px solid #bae6fd;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .nav-btn:hover {
+      background: #e0f2fe;
+    }
+
+    /* フォーム設定 */
     .form-group {
       margin-bottom: 16px;
     }
@@ -63,19 +95,25 @@
     label {
       display: block;
       font-size: 0.85rem;
-      font-weight: 600;
+      font-weight: 700;
       margin-bottom: 6px;
       color: var(--text-color);
     }
 
-    select, input {
+    select {
       width: 100%;
       padding: 12px;
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
       font-size: 1rem;
       background-color: #fff;
       appearance: none;
+      outline: none;
+    }
+
+    select:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
     }
 
     .form-row {
@@ -86,47 +124,53 @@
     .btn-submit {
       width: 100%;
       padding: 14px;
-      background-color: var(--primary-color);
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
       color: #fff;
       border: none;
-      border-radius: 12px;
-      font-size: 1rem;
+      border-radius: 14px;
+      font-size: 1.05rem;
       font-weight: bold;
       cursor: pointer;
-      transition: background-color 0.2s;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+      transition: transform 0.1s, box-shadow 0.2s;
       margin-top: 8px;
     }
 
-    .btn-submit:hover {
-      background-color: var(--primary-hover);
+    .btn-submit:active {
+      transform: scale(0.98);
     }
 
-    /* 結果エリア */
+    /* 結果カード */
     .result-card {
       display: none;
       margin-top: 24px;
-      padding: 20px;
-      border-radius: 16px;
+      padding: 24px 20px;
+      border-radius: 20px;
       background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
       border: 1px solid #bae6fd;
       text-align: center;
+      box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.8);
     }
 
     .result-date-location {
       font-size: 0.9rem;
+      font-weight: 600;
       color: var(--text-sub);
       margin-bottom: 8px;
     }
 
     .result-weather-main {
       font-size: 2.2rem;
-      font-weight: bold;
-      margin: 12px 0;
+      font-weight: 800;
+      color: #0c4a6e;
+      margin: 10px 0;
     }
 
     .result-temps {
-      font-size: 1.1rem;
-      margin-bottom: 16px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #0369a1;
+      margin-bottom: 20px;
     }
 
     .btn-share-open {
@@ -135,7 +179,7 @@
       background-color: #0f172a;
       color: #fff;
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
       font-size: 0.95rem;
       font-weight: bold;
       cursor: pointer;
@@ -143,9 +187,10 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
     }
 
-    /* PWAインストール案内用バナー */
+    /* PWAインストールバナー */
     .pwa-banner {
       display: none; 
       position: fixed; 
@@ -201,7 +246,7 @@
       cursor: pointer;
     }
 
-    /* モーダルダイアログ */
+    /* モーダル共通スタイル */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -209,7 +254,8 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.5);
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
       z-index: 2000;
       justify-content: center;
       align-items: center;
@@ -223,19 +269,35 @@
       border-radius: 20px;
       padding: 24px;
       box-sizing: border-box;
+      max-height: 85vh;
+      overflow-y: auto;
     }
 
     .modal-title {
-      font-size: 1.1rem;
+      font-size: 1.15rem;
       font-weight: bold;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
       text-align: center;
+      color: #0f172a;
     }
 
+    .modal-body-text {
+      font-size: 0.9rem;
+      color: var(--text-sub);
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+
+    .modal-body-text h4 {
+      color: #0f172a;
+      margin: 12px 0 4px 0;
+    }
+
+    /* シェアモーダル用選択肢 */
     .privacy-options {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
       margin-bottom: 20px;
     }
 
@@ -244,9 +306,10 @@
       align-items: flex-start;
       gap: 10px;
       padding: 12px;
-      border: 1px solid var(--border-color);
+      border: 1px solid #e2e8f0;
       border-radius: 12px;
       cursor: pointer;
+      background: #f8fafc;
     }
 
     .privacy-option input {
@@ -257,10 +320,11 @@
     .option-label {
       font-size: 0.9rem;
       font-weight: bold;
+      color: #0f172a;
     }
 
     .option-desc {
-      font-size: 0.75rem;
+      font-size: 0.78rem;
       color: var(--text-sub);
     }
 
@@ -295,27 +359,37 @@
       color: var(--text-color);
       padding: 12px;
       border-radius: 10px;
-      border: 1px solid var(--border-color);
+      border: 1px solid #cbd5e1;
       font-weight: bold;
       cursor: pointer;
     }
 
     .btn-modal-close {
-      margin-top: 12px;
+      margin-top: 14px;
       width: 100%;
       background: transparent;
       border: none;
       color: var(--text-sub);
       font-size: 0.85rem;
       cursor: pointer;
+      font-weight: 600;
     }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <h1>私が生まれた日の空模様</h1>
-    <div class="subtitle">1940年以降の生年月日から当時の天気を再現</div>
+    <div class="header">
+      <div class="app-title">私が生まれた日の空模様</div>
+      <div class="subtitle">1940年以降の過去の天気を再現</div>
+      
+      <!-- 復元したナビゲーションボタン群 -->
+      <div class="nav-buttons">
+        <button type="button" class="nav-btn" id="btnUsage">📖 使い方</button>
+        <button type="button" class="nav-btn" id="btnPwaInfo">📱 アプリ化</button>
+        <button type="button" class="nav-btn" id="btnAbout">ℹ️ 情報源</button>
+      </div>
+    </div>
 
     <form id="weatherForm">
       <div class="form-group">
@@ -357,6 +431,49 @@
     </div>
   </div>
 
+  <!-- 使い方モーダル -->
+  <div id="usageModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-title">📖 使い方</div>
+      <div class="modal-body-text">
+        <h4>1. フォームに入力</h4>
+        <p>あなたが生まれた「年・月・日」と「出生地の都道府県」を選択してください。</p>
+        <h4>2. 空模様を検索</h4>
+        <p>「空模様を検索する」ボタンを押すと、過去の気象データから当時の天気を瞬時に再現します。</p>
+        <h4>3. 安全にシェア</h4>
+        <p>「共有する」ボタンから、生年月日や場所を隠した状態で安全にSNSやLINEへ送信できます。</p>
+      </div>
+      <button type="button" class="btn-modal-close" onclick="closeModal('usageModal')">閉じる</button>
+    </div>
+  </div>
+
+  <!-- アプリ化説明モーダル -->
+  <div id="pwaInfoModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-title">📱 スマホへの追加方法（PWA）</div>
+      <div class="modal-body-text">
+        <p>このWebアプリはスマホのホーム画面に追加して、通常のアプリと同じ感覚で起動できます。</p>
+        <h4>iPhone (Safari) の場合</h4>
+        <p>画面下部の「共有ボタン (↑)」をタップし、「ホーム画面に追加」を選択してください。</p>
+        <h4>Android (Chrome) の場合</h4>
+        <p>画面右上の「3点メニュー (⋮)」をタップし、「ホーム画面に追加」または「アプリをインストール」を選択してください。</p>
+      </div>
+      <button type="button" class="btn-modal-close" onclick="closeModal('pwaInfoModal')">閉じる</button>
+    </div>
+  </div>
+
+  <!-- 情報源説明モーダル -->
+  <div id="aboutModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-title">ℹ️ 気象情報源について</div>
+      <div class="modal-body-text">
+        <p>本アプリで利用している過去の気象データは、オープンソースの気象APIサービス <strong>Open-Meteo</strong> から取得しています。</p>
+        <p>気象庁などの観測データや全球再解析データ（ERA5等）を統合した高精度なデータソースに基づき、1940年以降の天気を再現しています。</p>
+      </div>
+      <button type="button" class="btn-modal-close" onclick="closeModal('aboutModal')">閉じる</button>
+    </div>
+  </div>
+
   <!-- シェア設定モーダル -->
   <div id="shareModal" class="modal-overlay">
     <div class="modal-content">
@@ -394,7 +511,7 @@
         <button type="button" class="btn-share-web" id="shareWebBtn">🔗 その他のアプリ・メールで共有</button>
       </div>
 
-      <button type="button" class="btn-modal-close" id="closeShareModalBtn">閉じる</button>
+      <button type="button" class="btn-modal-close" onclick="closeModal('shareModal')">閉じる</button>
     </div>
   </div>
 
@@ -471,7 +588,6 @@
       prefSelect.add(new Option(p.name, idx));
     });
 
-    // 取得したデータの保持用
     let currentData = null;
 
     // 詳細な天気マッピング表
@@ -493,7 +609,6 @@
       95: { text: "雷雨", icon: "⚡", simple: "荒天" }
     };
 
-    // 天気コード変換関数
     function getWeatherLabel(code) {
       if (weatherMap[code]) {
         const item = weatherMap[code];
@@ -502,21 +617,32 @@
           simple: item.simple
         };
       }
-      
-      // 予備データ
       if (code <= 3) return { text: "晴れ/曇り ⛅", simple: "晴れ・曇り" };
       if (code <= 67) return { text: "雨 ☔", simple: "雨" };
       if (code <= 77) return { text: "雪 ❄️", simple: "雪" };
       return { text: "荒天 ⛈️", simple: "荒天" };
     }
 
-    // 季節の判定
     function getSeason(month) {
       if (month >= 3 && month <= 5) return "春";
       if (month >= 6 && month <= 8) return "夏";
       if (month >= 9 && month <= 11) return "秋";
       return "冬";
     }
+
+    // モーダル開閉汎用関数
+    function openModal(id) {
+      document.getElementById(id).style.display = 'flex';
+    }
+    function closeModal(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+
+    // ヘッダーボタンのイベントリスナー
+    document.getElementById('btnUsage').addEventListener('click', () => openModal('usageModal'));
+    document.getElementById('btnPwaInfo').addEventListener('click', () => openModal('pwaInfoModal'));
+    document.getElementById('btnAbout').addEventListener('click', () => openModal('aboutModal'));
+    document.getElementById('openShareModalBtn').addEventListener('click', () => openModal('shareModal'));
 
     // フォーム送信
     document.getElementById('weatherForm').addEventListener('submit', async (e) => {
@@ -558,16 +684,7 @@
       }
     });
 
-    // モーダル表示制御
-    const shareModal = document.getElementById('shareModal');
-    document.getElementById('openShareModalBtn').addEventListener('click', () => {
-      shareModal.style.display = 'flex';
-    });
-    document.getElementById('closeShareModalBtn').addEventListener('click', () => {
-      shareModal.style.display = 'none';
-    });
-
-    // シェア文言作成ロジック
+    // シェア文章生成
     function buildShareText() {
       if (!currentData) return '';
 
@@ -584,7 +701,7 @@
       }
     }
 
-    // 各シェアボタンイベント
+    // 各シェアボタン処理
     document.getElementById('shareXBtn').addEventListener('click', () => {
       const text = encodeURIComponent(buildShareText());
       window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
