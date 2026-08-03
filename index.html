@@ -332,38 +332,42 @@
     const suggestList = document.getElementById('suggestList');
     const errorMsg = document.getElementById('errorMsg');
 
-    regionSelect.addEventListener('change', async () => {
-      const selectedRegion = regionSelect.value;
-      locationInput.value = '';
-      selectedGeoData = null;
-      suggestList.style.display = 'none';
-      errorMsg.style.display = 'none';
+// ↓ 関数やイベントの外側に変数を宣言しておきます
+let selectedRegion = "";
 
-      if (!selectedRegion) {
-        locationInput.disabled = true;
-        locationInput.placeholder = "先に地方を選択してください";
-        JAPAN_LOCATION_DB = [];
-        return;
-      }
+regionSelect.addEventListener('change', async () => {
+  selectedRegion = regionSelect.value; // ← ここで更新する
+  locationInput.value = '';
+  selectedGeoData = null;
+  suggestList.style.display = 'none';
+  errorMsg.style.display = 'none';
 
-      try {
-        locationInput.disabled = true;
-        locationInput.placeholder = "データを読み込み中...";
-        
-        const res = await fetch(`./${selectedRegion}.json`);
-        if (!res.ok) throw new Error('地名データベースの読み込みに失敗しました。');
-        
-        JAPAN_LOCATION_DB = await res.json();
-        locationInput.disabled = false;
-        locationInput.placeholder = "例: 静岡市清水区、浜松市中央区など";
-      } catch (err) {
-        console.error("DB Load Error:", err);
-        errorMsg.innerText = "選択された地方のデータ読み込みに失敗しました。";
-        errorMsg.style.display = 'block';
-        locationInput.disabled = true;
-        locationInput.placeholder = "読み込みエラー";
-      }
-    });
+  if (!selectedRegion) {
+    locationInput.disabled = true;
+    locationInput.placeholder = "先に地方を選択してください";
+    JAPAN_LOCATION_DB = [];
+    return;
+  }
+
+  try {
+    locationInput.disabled = true;
+    locationInput.placeholder = "データを読み込み中...";
+    
+    // 変数 selectedRegion (例: "kanto") を使って fetch
+    const res = await fetch(`./${selectedRegion}.json`);
+    if (!res.ok) throw new Error('地名データベースの読み込みに失敗しました。');
+    
+    JAPAN_LOCATION_DB = await res.json();
+    locationInput.disabled = false;
+    locationInput.placeholder = "例: 渋谷区、横浜市中区など";
+  } catch (err) {
+    console.error("DB Load Error:", err);
+    errorMsg.innerText = "選択された地方のデータ読み込みに失敗しました。";
+    errorMsg.style.display = 'block';
+    locationInput.disabled = true;
+    locationInput.placeholder = "読み込みエラー";
+  }
+});
 
     let selectedGeoData = null;
 
