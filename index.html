@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>私が生まれた日の空模様</title>
+  
+  <!-- PWA関連の設定 -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <meta name="theme-color" content="#4a90e2">
+
   <style>
     :root {
       --primary-color: #4a90e2;
@@ -96,7 +103,6 @@
       display: none; margin-top: 20px; padding: 20px;
       background: linear-gradient(135deg, #e6f2ff 0%, #ffffff 100%);
       border-radius: 15px; border: 1px solid #d0e3ff;
-      /* スマホなどの狭い画面での日付やテキストのはみ出し対策 */
       word-break: break-all;
       overflow-wrap: break-word;
     }
@@ -128,6 +134,9 @@
       background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; padding: 20px;
     }
     .modal-content { background: #fff; padding: 20px; border-radius: 15px; max-width: 400px; width: 100%; text-align: left; font-size: 0.85rem; line-height: 1.6; }
+    .modal-content h3 { margin-bottom: 10px; font-size: 1rem; color: var(--primary-color); }
+    .modal-content ul { margin-left: 20px; margin-bottom: 12px; }
+    .disclaimer { font-size: 0.78rem; color: #777; background: #f8f9fa; padding: 8px 10px; border-radius: 6px; border-left: 3px solid #ccc; margin-top: 10px; }
     .modal-close-btn { width: 100%; padding: 10px; background: var(--primary-color); color: #fff; border: none; border-radius: 8px; font-weight: bold; margin-top: 12px; cursor: pointer; }
   </style>
 </head>
@@ -140,7 +149,7 @@
     <p class="subtitle">あなたが生まれた日の天気と気温をお調べします</p>
 
     <form id="weatherForm">
-      <!-- 地方選択エリアを追加 -->
+      <!-- (1) 地方を選択 -->
       <div class="form-group">
         <label for="regionSelect">【1】地方を選択</label>
         <select id="regionSelect">
@@ -156,21 +165,24 @@
         </select>
       </div>
 
+      <!-- (2) 生まれた場所 -->
       <div class="form-group">
-        <label>生年月日</label>
+        <label for="location">【2】生まれた場所（現在の市区町村名）</label>
+        <span class="label-hint">※先に地方を選択してください。候補が出たら選択します。</span>
+        <input type="text" id="location" placeholder="先に地方を選択してください" autocomplete="off" disabled required>
+        <div id="suggestList" class="suggest-list"></div>
+      </div>
+
+      <!-- (3) 生年月日 -->
+      <div class="form-group">
+        <label>【3】生年月日</label>
+        <span class="label-hint">※1940年（昭和15年）以降の空模様をお調べできます</span>
         <div class="date-selectors">
           <select id="eraSelect" class="select-era"></select>
           <select id="yearSelect" class="select-year"></select>
           <select id="monthSelect" class="select-month"></select>
           <select id="daySelect" class="select-day"></select>
         </div>
-      </div>
-
-      <div class="form-group">
-        <label for="location">【2】生まれた場所（現在の市区町村名）</label>
-        <span class="label-hint">※先に地方を選択してください。候補が出たら選択します。</span>
-        <input type="text" id="location" placeholder="先に地方を選択してください" autocomplete="off" disabled required>
-        <div id="suggestList" class="suggest-list"></div>
       </div>
 
       <button type="submit" class="btn-search">空模様を見る ☀️</button>
@@ -190,24 +202,37 @@
         <div class="temp-box">降水量<span id="precip" class="precip">-- mm</span></div>
       </div>
 
-      <button id="shareBtn" type="button" class="btn-share">🔗 結果をシェアする（URL付き）</button>
+      <button id="shareBtn" type="button" class="btn-share">🔗 結果をシェアする</button>
       <div id="shareToast" class="share-toast">結果をクリップボードにコピーしました！</div>
     </div>
   </div>
 
+  <!-- インフォメーションモーダル -->
   <div id="infoModal" class="modal-overlay">
     <div class="modal-content">
       <h3>ℹ️ データ出典・使用技術について</h3>
       <p>地方別に分割されたローカル地名データベースと、気象APIサービスを利用して過去の気象データを高精度に計算します。</p>
       <ul>
-        <li><strong>位置情報:</strong> 8地方別JSONファイル (`hokkaido.json` 等)</li>
+        <li><strong>位置情報:</strong> 8地方別JSONファイル</li>
         <li><strong>気象データ:</strong> Open-Meteo Historical Weather API</li>
       </ul>
+      <div class="disclaimer">
+        ※本サービスでは過去の公的な再解析気象データを使用しておりますが、局地的な天候の違いや特定の時間帯、詳細な場所によって実際の天気と差異が生じる場合があります。あらかじめご了承ください。
+      </div>
       <button type="button" class="modal-close-btn" id="modalCloseBtn">閉じる</button>
     </div>
   </div>
 
   <script>
+    // Service Worker の登録 (PWA)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(err => {
+          console.log('ServiceWorker registration failed: ', err);
+        });
+      });
+    }
+
     const weatherMap = {
       0: { text: "快晴", icon: "☀️" },
       1: { text: "晴れ", icon: "🌤️" },
@@ -227,11 +252,12 @@
     };
 
     const weekDays = ["日", "月", "火", "水", "木", "金", "土"];
+    
+    // 大正を除外し、1940年（昭和15年）以降に限定
     const eras = [
       { name: "昭和", startYear: 1926, endYear: 1989 },
       { name: "平成", startYear: 1989, endYear: 2019 },
       { name: "令和", startYear: 2019, endYear: 2026 },
-      { name: "大正", startYear: 1940, endYear: 1926 },
       { name: "西暦", startYear: 1940, endYear: 2026 }
     ];
 
@@ -249,6 +275,7 @@
     function updateYears() {
       const era = eras[eraSelect.value];
       yearSelect.innerHTML = '';
+      // 1940年以降のみに制限
       const start = Math.max(1940, era.startYear);
       for (let y = start; y <= era.endYear; y++) {
         const opt = document.createElement('option');
@@ -287,7 +314,7 @@
     monthSelect.addEventListener('change', updateDays);
 
     // ==========================================
-    // 8地方区分のJSON動的読み込み処理
+    // 地名データ読込 & 候補検索
     // ==========================================
     let JAPAN_LOCATION_DB = [];
     const regionSelect = document.getElementById('regionSelect');
@@ -313,7 +340,6 @@
         locationInput.disabled = true;
         locationInput.placeholder = "データを読み込み中...";
         
-        // 選択された地方のJSONファイルを読み込む（例: chubu.json）
         const res = await fetch(`./${selectedRegion}.json`);
         if (!res.ok) throw new Error('地名データベースの読み込みに失敗しました。');
         
@@ -371,7 +397,7 @@
       }
     });
 
-    let currentShareText = '';
+    let shareDataPayload = { title: '', text: '', url: '' };
 
     document.getElementById('weatherForm').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -426,9 +452,13 @@
         document.getElementById('tempMin').innerText = `${minTemp} ℃`;
         document.getElementById('precip').innerText = `${precip} mm`;
 
-        // クリップボードコピー用テキスト（現在のサイトURLを末尾に自動付与）
+        // シェア用データの生成
         const currentUrl = window.location.href;
-        currentShareText = `私が生まれた日（${year}年${parseInt(month)}月${parseInt(day)}日(${dayOfWeek}) ${geo.displayName} 付近）の空模様は【${weatherInfo.text} ${weatherInfo.icon}】でした！\n(最高: ${maxTemp}℃ / 最低: ${minTemp}℃ / 降水量: ${precip}mm)\n\n参照URL: ${currentUrl}\n#私が生まれた日の空模様`;
+        shareDataPayload = {
+          title: '私が生まれた日の空模様',
+          text: `私が生まれた日（${year}年${parseInt(month)}月${parseInt(day)}日(${dayOfWeek}) ${geo.displayName} 付近）の空模様は【${weatherInfo.text} ${weatherInfo.icon}】でした！\n(最高: ${maxTemp}℃ / 最低: ${minTemp}℃ / 降水量: ${precip}mm)\n#私が生まれた日の空模様\n`,
+          url: currentUrl
+        };
 
         resultCard.style.display = 'block';
       } catch (err) {
@@ -439,15 +469,28 @@
       }
     });
 
+    // モーダル表示
     const infoModal = document.getElementById('infoModal');
     document.getElementById('infoBtn').addEventListener('click', () => infoModal.style.display = 'flex');
     document.getElementById('modalCloseBtn').addEventListener('click', () => infoModal.style.display = 'none');
 
+    // スマホ標準シェア機能（Web Share API）＆ クリップボードフォールバック
     document.getElementById('shareBtn').addEventListener('click', async () => {
       const shareToast = document.getElementById('shareToast');
-      if (navigator.clipboard) {
-        await navigator.clipboard.writeText(currentShareText);
+      shareToast.style.display = 'none';
+
+      if (navigator.share) {
+        try {
+          await navigator.share(shareDataPayload);
+        } catch (err) {
+          // ユーザーのシェアキャンセルなどは無視
+        }
+      } else if (navigator.clipboard) {
+        // PC等の非対応ブラウザ用フォールバック
+        const fullText = `${shareDataPayload.text}\n参照URL: ${shareDataPayload.url}`;
+        await navigator.clipboard.writeText(fullText);
         shareToast.style.display = 'block';
+        setTimeout(() => { shareToast.style.display = 'none'; }, 3000);
       }
     });
   </script>
