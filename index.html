@@ -5,15 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>私が生まれた日の空模様</title>
 
-  <!-- Google アナリティクス -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-7N43XQ844K"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+<!-- Google アナリティクス -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-7N43XQ844K"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
 
-  gtag('config', 'G-7N43XQ844K');
-</script>
+    gtag('config', 'G-7N43XQ844K');
+  </script>
   
   <!-- PWA関連の設定 -->
   <link rel="manifest" href="manifest.json">
@@ -54,15 +54,22 @@
       text-align: center;
     }
 
-    .info-btn {
+    .header-nav {
       position: absolute;
-      top: 20px; right: 20px;
-      background: none; border: none;
-      font-size: 1.2rem; cursor: pointer;
-      color: var(--sub-text);
+      top: 16px; right: 16px;
+      display: flex; gap: 8px;
     }
 
-    h1 { font-size: 1.4rem; color: var(--primary-color); margin-bottom: 6px; padding-right: 30px; }
+    .nav-btn {
+      background: #f0f4f8; border: none;
+      padding: 6px 10px; border-radius: 12px;
+      font-size: 0.78rem; cursor: pointer;
+      color: var(--sub-text); font-weight: bold;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .nav-btn:hover { background: #e0e8f0; }
+
+    h1 { font-size: 1.4rem; color: var(--primary-color); margin-top: 10px; margin-bottom: 6px; }
     p.subtitle { font-size: 0.85rem; color: var(--sub-text); margin-bottom: 20px; }
 
     .form-group { text-align: left; margin-bottom: 16px; position: relative; }
@@ -113,8 +120,7 @@
       display: none; margin-top: 20px; padding: 20px;
       background: linear-gradient(135deg, #e6f2ff 0%, #ffffff 100%);
       border-radius: 15px; border: 1px solid #d0e3ff;
-      word-break: break-all;
-      overflow-wrap: break-word;
+      word-break: break-all; overflow-wrap: break-word;
     }
 
     .result-date-location { font-size: 0.95rem; font-weight: bold; margin-bottom: 12px; line-height: 1.5; white-space: pre-wrap; }
@@ -139,6 +145,7 @@
     .share-toast { display: none; margin-top: 8px; font-size: 0.85rem; color: #28a745; font-weight: bold; }
     .error-msg { display: none; margin-top: 15px; color: #d9534f; font-size: 0.85rem; }
 
+    /* モーダル共通スタイル */
     .modal-overlay {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; padding: 20px;
@@ -148,12 +155,39 @@
     .modal-content ul { margin-left: 20px; margin-bottom: 12px; }
     .disclaimer { font-size: 0.78rem; color: #777; background: #f8f9fa; padding: 8px 10px; border-radius: 6px; border-left: 3px solid #ccc; margin-top: 10px; }
     .modal-close-btn { width: 100%; padding: 10px; background: var(--primary-color); color: #fff; border: none; border-radius: 8px; font-weight: bold; margin-top: 12px; cursor: pointer; }
+
+    /* PWAインストール案内用バナー */
+    .pwa-banner {
+      display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      width: calc(100% - 32px); max-width: 440px; background: #fff; padding: 16px;
+      border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 1100;
+      border: 2px solid var(--primary-color); text-align: left;
+    }
+    .pwa-banner-title { font-weight: bold; color: var(--primary-color); font-size: 0.95rem; margin-bottom: 4px; }
+    .pwa-banner-text { font-size: 0.82rem; color: #555; margin-bottom: 12px; line-height: 1.4; }
+    .pwa-btn-group { display: flex; gap: 8px; }
+    .btn-pwa-install { flex: 2; padding: 8px; background: var(--primary-color); color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    .btn-pwa-dismiss { flex: 1; padding: 8px; background: #e0e0e0; color: #333; border: none; border-radius: 8px; cursor: pointer; }
+
+    /* チュートリアルモーダル */
+    .tutorial-step { display: none; }
+    .tutorial-step.active { display: block; }
+    .tutorial-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
+    .btn-tut-nav { padding: 8px 16px; background: var(--primary-color); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
+    .btn-tut-nav:disabled { background: #ccc; cursor: not-allowed; }
+    .step-dots { display: flex; gap: 6px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; }
+    .dot.active { background: var(--primary-color); }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <button type="button" class="info-btn" id="infoBtn">ℹ️</button>
+    <div class="header-nav">
+      <button type="button" class="nav-btn" id="pwaInstallBtn" style="display:none;">📱 アプリ化</button>
+      <button type="button" class="nav-btn" id="tutBtn">❓ 使い方</button>
+      <button type="button" class="nav-btn" id="infoBtn">ℹ️ 情報</button>
+    </div>
 
     <h1>私が生まれた日の空模様</h1>
     <p class="subtitle">あなたが生まれた日の天気と気温をお調べします</p>
@@ -217,6 +251,48 @@
     </div>
   </div>
 
+  <!-- PWAホーム追加案内バナー -->
+  <div id="pwaBanner" class="pwa-banner">
+    <div class="pwa-banner-title">📱 ホーム画面に追加しませんか？</div>
+    <div class="pwa-banner-text" id="pwaBannerText">
+      アプリのように全画面表示でスムーズに呼び出せるようになります！
+    </div>
+    <div class="pwa-btn-group">
+      <button type="button" class="btn-pwa-install" id="pwaActionBtn">追加する</button>
+      <button type="button" class="btn-pwa-dismiss" id="pwaDismissBtn">あとで</button>
+    </div>
+  </div>
+
+  <!-- チュートリアルモーダル -->
+  <div id="tutModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="tutorial-step active" data-step="1">
+        <h3>使い方 (1/3): 条件の入力</h3>
+        <p>1. 最初に**「地方」**を選択します。<br>
+        2. 次に生まれた**「市区町村」**を入力し、出てくる候補一覧からタップして選びます。<br>
+        3. 生年月日（1940年以降）を選択します。</p>
+      </div>
+      <div class="tutorial-step" data-step="2">
+        <h3>使い方 (2/3): 結果の確認</h3>
+        <p>「空模様を見る」を押すと、指定した日の**天気・最高/最低気温・降水量**が瞬時に計算されて表示されます！</p>
+      </div>
+      <div class="tutorial-step" data-step="3">
+        <h3>使い方 (3/3): 結果のシェア</h3>
+        <p>「結果をシェアする」ボタンを押すと、スマホの標準共有シートが開き、LINEやSNSでお友達や家族に生まれた日の天気をシェアできます！</p>
+      </div>
+
+      <div class="tutorial-nav">
+        <button type="button" class="btn-tut-nav" id="tutPrevBtn" disabled>前へ</button>
+        <div class="step-dots">
+          <div class="dot active"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+        <button type="button" class="btn-tut-nav" id="tutNextBtn">次へ</button>
+      </div>
+    </div>
+  </div>
+
   <!-- インフォメーションモーダル -->
   <div id="infoModal" class="modal-overlay">
     <div class="modal-content">
@@ -263,7 +339,6 @@
 
     const weekDays = ["日", "月", "火", "水", "木", "金", "土"];
     
-    // 大正を除外し、1940年（昭和15年）以降に限定
     const eras = [
       { name: "昭和", startYear: 1926, endYear: 1989 },
       { name: "平成", startYear: 1989, endYear: 2019 },
@@ -285,7 +360,6 @@
     function updateYears() {
       const era = eras[eraSelect.value];
       yearSelect.innerHTML = '';
-      // 1940年以降のみに制限
       const start = Math.max(1940, era.startYear);
       for (let y = start; y <= era.endYear; y++) {
         const opt = document.createElement('option');
@@ -323,51 +397,46 @@
     yearSelect.addEventListener('change', updateDays);
     monthSelect.addEventListener('change', updateDays);
 
-    // ==========================================
     // 地名データ読込 & 候補検索
-    // ==========================================
     let JAPAN_LOCATION_DB = [];
+    let selectedRegion = ""; // 変数を上位で定義
     const regionSelect = document.getElementById('regionSelect');
     const locationInput = document.getElementById('location');
     const suggestList = document.getElementById('suggestList');
     const errorMsg = document.getElementById('errorMsg');
 
-// ↓ 関数やイベントの外側に変数を宣言しておきます
-let selectedRegion = "";
+    regionSelect.addEventListener('change', async () => {
+      selectedRegion = regionSelect.value;
+      locationInput.value = '';
+      selectedGeoData = null;
+      suggestList.style.display = 'none';
+      errorMsg.style.display = 'none';
 
-regionSelect.addEventListener('change', async () => {
-  selectedRegion = regionSelect.value; // ← ここで更新する
-  locationInput.value = '';
-  selectedGeoData = null;
-  suggestList.style.display = 'none';
-  errorMsg.style.display = 'none';
+      if (!selectedRegion) {
+        locationInput.disabled = true;
+        locationInput.placeholder = "先に地方を選択してください";
+        JAPAN_LOCATION_DB = [];
+        return;
+      }
 
-  if (!selectedRegion) {
-    locationInput.disabled = true;
-    locationInput.placeholder = "先に地方を選択してください";
-    JAPAN_LOCATION_DB = [];
-    return;
-  }
-
-  try {
-    locationInput.disabled = true;
-    locationInput.placeholder = "データを読み込み中...";
-    
-    // 変数 selectedRegion (例: "kanto") を使って fetch
-    const res = await fetch(`./${selectedRegion}.json`);
-    if (!res.ok) throw new Error('地名データベースの読み込みに失敗しました。');
-    
-    JAPAN_LOCATION_DB = await res.json();
-    locationInput.disabled = false;
-    locationInput.placeholder = "例: 渋谷区、横浜市中区など";
-  } catch (err) {
-    console.error("DB Load Error:", err);
-    errorMsg.innerText = "選択された地方のデータ読み込みに失敗しました。";
-    errorMsg.style.display = 'block';
-    locationInput.disabled = true;
-    locationInput.placeholder = "読み込みエラー";
-  }
-});
+      try {
+        locationInput.disabled = true;
+        locationInput.placeholder = "データを読み込み中...";
+        
+        const res = await fetch(`./${selectedRegion}.json`);
+        if (!res.ok) throw new Error('地名データベースの読み込みに失敗しました。');
+        
+        JAPAN_LOCATION_DB = await res.json();
+        locationInput.disabled = false;
+        locationInput.placeholder = "例: 渋谷区、浜松市中央区など";
+      } catch (err) {
+        console.error("DB Load Error:", err);
+        errorMsg.innerText = "選択された地方のデータ読み込みに失敗しました。";
+        errorMsg.style.display = 'block';
+        locationInput.disabled = true;
+        locationInput.placeholder = "読み込みエラー";
+      }
+    });
 
     let selectedGeoData = null;
 
@@ -483,7 +552,7 @@ regionSelect.addEventListener('change', async () => {
             'birth_era': eras[eraSelect.value].name
           });
         }
-        
+
         resultCard.style.display = 'block';
       } catch (err) {
         errorMsg.innerText = err.message;
@@ -493,12 +562,12 @@ regionSelect.addEventListener('change', async () => {
       }
     });
 
-    // モーダル表示
+    // モーダル表示制御
     const infoModal = document.getElementById('infoModal');
     document.getElementById('infoBtn').addEventListener('click', () => infoModal.style.display = 'flex');
     document.getElementById('modalCloseBtn').addEventListener('click', () => infoModal.style.display = 'none');
 
-    // スマホ標準シェア機能（Web Share API）＆ クリップボードフォールバック
+    // シェア機能
     document.getElementById('shareBtn').addEventListener('click', async () => {
       const shareToast = document.getElementById('shareToast');
       shareToast.style.display = 'none';
@@ -506,16 +575,132 @@ regionSelect.addEventListener('change', async () => {
       if (navigator.share) {
         try {
           await navigator.share(shareDataPayload);
-        } catch (err) {
-          // ユーザーのシェアキャンセルなどは無視
-        }
+        } catch (err) {}
       } else if (navigator.clipboard) {
-        // PC等の非対応ブラウザ用フォールバック
         const fullText = `${shareDataPayload.text}\n参照URL: ${shareDataPayload.url}`;
         await navigator.clipboard.writeText(fullText);
         shareToast.style.display = 'block';
         setTimeout(() => { shareToast.style.display = 'none'; }, 3000);
       }
+    });
+
+    // ==========================================
+    // 1. PWA インストール案内ロジック
+    // ==========================================
+    let deferredPrompt = null;
+    const pwaBanner = document.getElementById('pwaBanner');
+    const pwaActionBtn = document.getElementById('pwaActionBtn');
+    const pwaDismissBtn = document.getElementById('pwaDismissBtn');
+    const pwaInstallBtnNav = document.getElementById('pwaInstallBtn');
+    const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+    // iOS、または標準プロンプトが受け取れる場合のボタン表示
+    if (isiOS || 'BeforeInstallPromptEvent' in window) {
+      pwaInstallBtnNav.style.display = 'flex';
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      
+      // 初回訪問時のみ自動表示
+      if (!localStorage.getItem('pwaPromptDismissed')) {
+        setTimeout(() => { showPwaBanner(); }, 2000);
+      }
+    });
+
+    function showPwaBanner() {
+      if (isiOS) {
+        document.getElementById('pwaBannerText').innerText = "Safariの「共有ボタン (↑)」をタップし、「ホーム画面に追加」を選択してください。";
+        pwaActionBtn.innerText = "OK";
+      } else {
+        document.getElementById('pwaBannerText').innerText = "アプリとしてインストールすると、ホーム画面から簡単に開けるようになります！";
+        pwaActionBtn.innerText = "追加する";
+      }
+      pwaBanner.style.display = 'block';
+    }
+
+    pwaActionBtn.addEventListener('click', async () => {
+      pwaBanner.style.display = 'none';
+      localStorage.setItem('pwaPromptDismissed', 'true');
+
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        deferredPrompt = null;
+      }
+      
+      // インストール後・閉じたた後にチュートリアルチェック
+      checkAutoStartTutorial();
+    });
+
+    pwaDismissBtn.addEventListener('click', () => {
+      pwaBanner.style.display = 'none';
+      localStorage.setItem('pwaPromptDismissed', 'true');
+      checkAutoStartTutorial();
+    });
+
+    pwaInstallBtnNav.addEventListener('click', () => {
+      showPwaBanner();
+    });
+
+    // ==========================================
+    // 2. チュートリアルロジック
+    // ==========================================
+    const tutModal = document.getElementById('tutModal');
+    const tutSteps = document.querySelectorAll('.tutorial-step');
+    const tutDots = document.querySelectorAll('.dot');
+    const tutPrevBtn = document.getElementById('tutPrevBtn');
+    const tutNextBtn = document.getElementById('tutNextBtn');
+    let currentTutStep = 1;
+
+    function showStep(step) {
+      currentTutStep = step;
+      tutSteps.forEach((el, idx) => {
+        el.classList.toggle('active', (idx + 1) === step);
+      });
+      tutDots.forEach((el, idx) => {
+        el.classList.toggle('active', (idx + 1) === step);
+      });
+
+      tutPrevBtn.disabled = (step === 1);
+      tutNextBtn.innerText = (step === tutSteps.length) ? '完了' : '次へ';
+    }
+
+    function openTutorial() {
+      showStep(1);
+      tutModal.style.display = 'flex';
+    }
+
+    tutPrevBtn.addEventListener('click', () => {
+      if (currentTutStep > 1) showStep(currentTutStep - 1);
+    });
+
+    tutNextBtn.addEventListener('click', () => {
+      if (currentTutStep < tutSteps.length) {
+        showStep(currentTutStep + 1);
+      } else {
+        tutModal.style.display = 'none';
+        localStorage.setItem('tutorialCompleted', 'true');
+      }
+    });
+
+    document.getElementById('tutBtn').addEventListener('click', openTutorial);
+
+    // 初回起動時の自動判定
+    function checkAutoStartTutorial() {
+      if (!localStorage.getItem('tutorialCompleted')) {
+        setTimeout(() => { openTutorial(); }, 500);
+      }
+    }
+
+    // PWA案内が出ない環境（既にインストール済み、または非対応PC等）での初回チュートリアル起動
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        if (!deferredPrompt && !isiOS) {
+          checkAutoStartTutorial();
+        }
+      }, 2500);
     });
   </script>
 </body>
