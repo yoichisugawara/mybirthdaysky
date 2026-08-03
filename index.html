@@ -170,8 +170,7 @@
       <!-- サジェスト付き市区町村入力 -->
       <div class="form-group">
         <label>市区町村名（入力または選択）</label>
-        <input type="text" id="cityInput" list="cityDatalist" placeholder="文字を入力するかリストから選択" autocomplete="off" required />
-        <datalist id="cityDatalist"></datalist>
+<input type="text" id="cityInput" list="cityDatalist" placeholder="タップまたは文字入力で選択" autocomplete="on" autocomplete="list" placeholder="選択してください" required />        <datalist id="cityDatalist"></datalist>
         <div id="statusMsg" class="status-msg">データ読み込み中...</div>
       </div>
 
@@ -340,6 +339,19 @@
     // 初期ロード
     loadRegionJson(regionSelect.value);
 
+    const cityInput = document.getElementById('cityInput');
+
+// スマホでタップ（フォーカス）したときに、入力が空でも候補を表示させる（iOS/Android対策）
+cityInput.addEventListener('focus', () => {
+  // 一瞬値を空にして再認識させることでスマホのdatalist表示を呼び出す
+  cityInput.setAttribute('placeholder', '検索ワードを入力...');
+});
+
+// スマホキーボードで「開く/次へ」を押した際の利便性向上
+cityInput.addEventListener('touchstart', () => {
+  cityInput.focus();
+});
+    
     let currentData = null;
 
     const weatherMap = {
