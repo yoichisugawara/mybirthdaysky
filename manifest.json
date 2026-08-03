@@ -1,15 +1,17 @@
 {
   "name": "私が生まれた日の空模様",
   "short_name": "生まれた日の空",
+  "description": "あなたが生まれた日の天気と気温をお調べします",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f0f4f8",
   "theme_color": "#4a90e2",
   "icons": [
     {
-      "src": "./icon.svg",
-      "sizes": "192x192 512x512",
-      "type": "image/svg+xml"
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ]
 }
