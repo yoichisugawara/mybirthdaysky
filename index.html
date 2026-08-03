@@ -5,13 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>私が生まれた日の空模様</title>
 
-  <!-- Google アナリティクス (GA4) -->
+  <!-- ファビコン（404エラー防止） -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☀️</text></svg>">
+
+  <!-- Google アナリティクス (GA4) ※ご自身のIDに書き換えてください -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-7N43XQ844K"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-
     gtag('config', 'G-7N43XQ844K');
   </script>
 
@@ -27,11 +29,7 @@
       --border-color: #bae6fd;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -55,303 +53,79 @@
       border: 1px solid #e0f2fe;
     }
 
-    .header {
-      text-align: center;
-      margin-bottom: 20px;
-    }
+    .header { text-align: center; margin-bottom: 20px; }
+    .app-title { font-size: 1.6rem; font-weight: 800; color: #0369a1; margin-bottom: 4px; }
+    .subtitle { font-size: 0.85rem; color: var(--text-sub); margin-bottom: 16px; }
 
-    .app-title {
-      font-size: 1.6rem;
-      font-weight: 800;
-      color: #0369a1;
-      margin-bottom: 4px;
-      letter-spacing: -0.02em;
-    }
-
-    .subtitle {
-      font-size: 0.85rem;
-      color: var(--text-sub);
-      margin-bottom: 16px;
-    }
-
-    .nav-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
+    .nav-buttons { display: flex; justify-content: center; gap: 8px; margin-bottom: 8px; }
     .nav-btn {
-      background: #f0f9ff;
-      color: #0284c7;
-      border: 1px solid #bae6fd;
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.2s;
+      background: #f0f9ff; color: #0284c7; border: 1px solid #bae6fd;
+      padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; cursor: pointer;
     }
 
-    .nav-btn:hover {
-      background: #e0f2fe;
-    }
-
-    .form-group {
-      margin-bottom: 16px;
-    }
-
-    label {
-      display: block;
-      font-size: 0.85rem;
-      font-weight: 700;
-      margin-bottom: 6px;
-      color: var(--text-color);
-    }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px; }
 
     select, input[type="text"] {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #cbd5e1;
-      border-radius: 12px;
-      font-size: 1rem;
-      background-color: #fff;
-      outline: none;
-      box-sizing: border-box;
+      width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 12px;
+      font-size: 1rem; background-color: #fff; outline: none;
     }
 
-    select {
-      appearance: none;
-    }
+    .form-row { display: flex; gap: 8px; }
 
-    select:focus, input[type="text"]:focus {
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    .status-msg {
+      font-size: 0.75rem;
+      margin-top: 4px;
+      color: #0284c7;
+      font-weight: 600;
     }
-
-    .form-row {
-      display: flex;
-      gap: 8px;
-    }
+    .status-msg.error { color: #e11d48; }
 
     .btn-submit {
-      width: 100%;
-      padding: 14px;
+      width: 100%; padding: 14px;
       background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-      color: #fff;
-      border: none;
-      border-radius: 14px;
-      font-size: 1.05rem;
-      font-weight: bold;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
-      transition: transform 0.1s, box-shadow 0.2s;
-      margin-top: 8px;
+      color: #fff; border: none; border-radius: 14px; font-size: 1.05rem; font-weight: bold;
+      cursor: pointer; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3); margin-top: 8px;
     }
 
-    .btn-submit:active {
-      transform: scale(0.98);
-    }
-
-    /* 結果カード */
     .result-card {
-      display: none;
-      margin-top: 24px;
-      padding: 24px 20px;
-      border-radius: 20px;
+      display: none; margin-top: 24px; padding: 24px 20px; border-radius: 20px;
       background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
-      border: 1px solid #bae6fd;
-      text-align: center;
-      box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.8);
+      border: 1px solid #bae6fd; text-align: center;
     }
-
-    .result-date-location {
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--text-sub);
-      margin-bottom: 8px;
-    }
-
-    .result-weather-main {
-      font-size: 2.2rem;
-      font-weight: 800;
-      color: #0c4a6e;
-      margin: 10px 0;
-    }
-
-    .result-temps {
-      font-size: 1.05rem;
-      font-weight: 600;
-      color: #0369a1;
-      margin-bottom: 12px;
-    }
-
-    .result-details {
-      font-size: 0.85rem;
-      color: var(--text-sub);
-      margin-bottom: 20px;
-      background: rgba(255, 255, 255, 0.6);
-      padding: 8px 12px;
-      border-radius: 8px;
-      display: inline-block;
-    }
+    .result-date-location { font-size: 0.9rem; font-weight: 600; color: var(--text-sub); }
+    .result-weather-main { font-size: 2.2rem; font-weight: 800; color: #0c4a6e; margin: 10px 0; }
+    .result-temps { font-size: 1.05rem; font-weight: 600; color: #0369a1; margin-bottom: 12px; }
+    .result-details { font-size: 0.85rem; color: var(--text-sub); margin-bottom: 20px; background: rgba(255,255,255,0.6); padding: 8px 12px; border-radius: 8px; display: inline-block; }
 
     .btn-share-open {
-      width: 100%;
-      padding: 12px;
-      background-color: #0f172a;
-      color: #fff;
-      border: none;
-      border-radius: 12px;
-      font-size: 0.95rem;
-      font-weight: bold;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+      width: 100%; padding: 12px; background-color: #0f172a; color: #fff;
+      border: none; border-radius: 12px; font-size: 0.95rem; font-weight: bold; cursor: pointer;
     }
 
-    /* モーダル共通スタイル */
+    /* モーダル */
     .modal-overlay {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(15, 23, 42, 0.6);
-      backdrop-filter: blur(4px);
-      z-index: 2000;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 2000;
+      justify-content: center; align-items: center; padding: 20px;
     }
-
     .modal-content {
-      background: #fff;
-      width: 100%;
-      max-width: 420px;
-      border-radius: 20px;
-      padding: 24px;
-      box-sizing: border-box;
-      max-height: 85vh;
-      overflow-y: auto;
+      background: #fff; width: 100%; max-width: 420px; border-radius: 20px; padding: 24px; max-height: 85vh; overflow-y: auto;
     }
+    .modal-title { font-size: 1.15rem; font-weight: bold; margin-bottom: 12px; text-align: center; }
+    .modal-body-text { font-size: 0.9rem; color: var(--text-sub); line-height: 1.7; margin-bottom: 16px; }
 
-    .modal-title {
-      font-size: 1.15rem;
-      font-weight: bold;
-      margin-bottom: 12px;
-      text-align: center;
-      color: #0f172a;
-    }
+    .privacy-options { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+    .privacy-option { display: flex; align-items: center; gap: 12px; padding: 14px; border: 2px solid #e2e8f0; border-radius: 14px; cursor: pointer; background: #f8fafc; }
+    .privacy-option input[type="radio"] { width: 22px; height: 22px; accent-color: var(--primary-color); }
+    .option-label { font-size: 0.95rem; font-weight: bold; }
+    .option-desc { font-size: 0.8rem; color: var(--text-sub); }
 
-    .modal-body-text {
-      font-size: 0.9rem;
-      color: var(--text-sub);
-      line-height: 1.7;
-      margin-bottom: 16px;
-    }
-
-    .modal-body-text h4 {
-      color: #0f172a;
-      margin: 12px 0 4px 0;
-    }
-
-    /* シェアモーダル用（ラジオボタン・押しやすさ改善） */
-    .privacy-options {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .privacy-option {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 14px;
-      border: 2px solid #e2e8f0;
-      border-radius: 14px;
-      cursor: pointer;
-      background: #f8fafc;
-      transition: border-color 0.2s, background-color 0.2s;
-    }
-
-    .privacy-option:hover {
-      border-color: #bae6fd;
-      background-color: #f0f9ff;
-    }
-
-    /* 大きなラジオボタン */
-    .privacy-option input[type="radio"] {
-      width: 22px;
-      height: 22px;
-      accent-color: var(--primary-color);
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-
-    .option-label {
-      font-size: 0.95rem;
-      font-weight: bold;
-      color: #0f172a;
-    }
-
-    .option-desc {
-      font-size: 0.8rem;
-      color: var(--text-sub);
-      margin-top: 2px;
-    }
-
-    .share-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .btn-share-x {
-      background: #000;
-      color: #fff;
-      padding: 12px;
-      border-radius: 10px;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .btn-share-line {
-      background: #06c755;
-      color: #fff;
-      padding: 12px;
-      border-radius: 10px;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .btn-share-web {
-      background: #f1f5f9;
-      color: var(--text-color);
-      padding: 12px;
-      border-radius: 10px;
-      border: 1px solid #cbd5e1;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .btn-modal-close {
-      margin-top: 14px;
-      width: 100%;
-      background: transparent;
-      border: none;
-      color: var(--text-sub);
-      font-size: 0.85rem;
-      cursor: pointer;
-      font-weight: 600;
-    }
+    .share-actions { display: flex; flex-direction: column; gap: 10px; }
+    .btn-share-x { background: #000; color: #fff; padding: 12px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
+    .btn-share-line { background: #06c755; color: #fff; padding: 12px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
+    .btn-share-web { background: #f1f5f9; color: var(--text-color); padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-weight: bold; cursor: pointer; }
+    .btn-modal-close { margin-top: 14px; width: 100%; background: transparent; border: none; color: var(--text-sub); font-size: 0.85rem; cursor: pointer; font-weight: 600; }
   </style>
 </head>
 <body>
@@ -378,7 +152,7 @@
         </div>
       </div>
 
-      <!-- 地方選択 -->
+      <!-- 地方選択（ファイル名と完全一致：u無しの形式に対応） -->
       <div class="form-group">
         <label>出生地の地方</label>
         <select id="regionSelect" required>
@@ -389,15 +163,16 @@
           <option value="kinki">近畿地方</option>
           <option value="chugoku">中国地方</option>
           <option value="shikoku">四国地方</option>
-          <option value="kyushu_okinawa">九州・沖縄地方</option>
+          <option value="kyushu">九州・沖縄地方</option>
         </select>
       </div>
 
-      <!-- JSON連動のサジェスト付き市区町村入力 -->
+      <!-- サジェスト付き市区町村入力 -->
       <div class="form-group">
-        <label>市区町村名（候補から選択）</label>
-        <input type="text" id="cityInput" list="cityDatalist" placeholder="例：静岡市、浜松市天竜区など" autocomplete="off" required />
+        <label>市区町村名（入力または選択）</label>
+        <input type="text" id="cityInput" list="cityDatalist" placeholder="文字を入力するかリストから選択" autocomplete="off" required />
         <datalist id="cityDatalist"></datalist>
+        <div id="statusMsg" class="status-msg">データ読み込み中...</div>
       </div>
 
       <button type="submit" class="btn-submit" id="submitBtn">空模様を検索する</button>
@@ -414,92 +189,76 @@
     </div>
   </div>
 
-  <!-- 使い方モーダル -->
+  <!-- モーダル各種 -->
   <div id="usageModal" class="modal-overlay">
     <div class="modal-content">
       <div class="modal-title">📖 使い方</div>
       <div class="modal-body-text">
         <h4>1. フォームに入力</h4>
-        <p>「生年月日（和暦対応）」「地方」を選択すると、その地方の市区町村が候補（サジェスト）として表示されます。</p>
+        <p>地方を選択すると、その地方の市区町村データが読み込まれ、入力欄に候補がサジェストされます。</p>
         <h4>2. 空模様を検索</h4>
         <p>「空模様を検索する」ボタンを押すと、該当する位置情報から当時の詳細な天気を再現します。</p>
-        <h4>3. 安全にシェア</h4>
-        <p>「共有する」ボタンから、プライバシーレベルに合わせて安全にSNSへ送信できます。</p>
       </div>
       <button type="button" class="btn-modal-close" onclick="closeModal('usageModal')">閉じる</button>
     </div>
   </div>
 
-  <!-- アプリ化説明モーダル -->
   <div id="pwaInfoModal" class="modal-overlay">
     <div class="modal-content">
       <div class="modal-title">📱 スマホへの追加方法（PWA）</div>
       <div class="modal-body-text">
-        <p>このWebアプリはスマホのホーム画面に追加して、通常のアプリと同じ感覚で起動できます。</p>
-        <h4>iPhone (Safari) の場合</h4>
-        <p>画面下部の「共有ボタン (↑)」をタップし、「ホーム画面に追加」を選択してください。</p>
-        <h4>Android (Chrome) の場合</h4>
-        <p>画面右上の「3点メニュー (⋮)」をタップし、「ホーム画面に追加」を選択してください。</p>
+        <p>iPhone(Safari): 共有ボタン →「ホーム画面に追加」<br>Android(Chrome): メニュー(⋮) →「ホーム画面に追加」</p>
       </div>
       <button type="button" class="btn-modal-close" onclick="closeModal('pwaInfoModal')">閉じる</button>
     </div>
   </div>
 
-  <!-- 情報源説明モーダル -->
   <div id="aboutModal" class="modal-overlay">
     <div class="modal-content">
       <div class="modal-title">ℹ️ 気象情報源について</div>
       <div class="modal-body-text">
-        <p>本アプリで利用している過去の気象データは、オープンソースの気象APIサービス <strong>Open-Meteo</strong> から取得しています。</p>
-        <p>全球再解析データ（ERA5等）を統合したデータソースに基づき、1940年以降の天気を再現しています。</p>
+        <p>Open-Meteo API を利用し、1940年以降の全球気象データを再現しています。</p>
       </div>
       <button type="button" class="btn-modal-close" onclick="closeModal('aboutModal')">閉じる</button>
     </div>
   </div>
 
-  <!-- シェア設定モーダル -->
   <div id="shareModal" class="modal-overlay">
     <div class="modal-content">
       <div class="modal-title">📱 シェアの設定</div>
-      
       <div class="privacy-options">
         <label class="privacy-option">
           <input type="radio" name="privacyLevel" value="season" checked>
           <div>
-            <div class="option-label">🔒 季節・天気のみ（おすすめ）</div>
-            <div class="option-desc">年月日と場所を伏せ、季節とざっくりした気温のみ共有します。</div>
+            <div class="option-label">🔒 季節・天気のみ</div>
+            <div class="option-desc">年月日と場所を伏せて共有します。</div>
           </div>
         </label>
-
         <label class="privacy-option">
           <input type="radio" name="privacyLevel" value="birthday">
           <div>
             <div class="option-label">🎂 月日・天気のみ</div>
-            <div class="option-desc">生年と詳細場所を伏せ、誕生日当日などのアピールに使えます。</div>
+            <div class="option-desc">生年と詳細場所を伏せて共有します。</div>
           </div>
         </label>
-
         <label class="privacy-option">
           <input type="radio" name="privacyLevel" value="full">
           <div>
             <div class="option-label">📢 すべて表示（フル）</div>
-            <div class="option-desc">生年月日・市区町村・最高最低気温・降水量・風速をすべて表示します。</div>
+            <div class="option-desc">生年月日・場所・最高最低気温・降水量・風速を表示します。</div>
           </div>
         </label>
       </div>
-
       <div class="share-actions">
         <button type="button" class="btn-share-x" id="shareXBtn">𝕏 (Twitter) で投稿</button>
         <button type="button" class="btn-share-line" id="shareLineBtn">LINE で送る</button>
         <button type="button" class="btn-share-web" id="shareWebBtn">🔗 その他のアプリ・メールで共有</button>
       </div>
-
       <button type="button" class="btn-modal-close" onclick="closeModal('shareModal')">閉じる</button>
     </div>
   </div>
 
   <script>
-    // 和暦変換
     function getWareki(year) {
       if (year >= 2019) return `令和${year - 2018 === 1 ? '元' : year - 2018}年`;
       if (year >= 1989) return `平成${year - 1988 === 1 ? '元' : year - 1988}年`;
@@ -508,7 +267,6 @@
       return '';
     }
 
-    // ドロップダウン初期化
     const yearSelect = document.getElementById('yearSelect');
     const monthSelect = document.getElementById('monthSelect');
     const daySelect = document.getElementById('daySelect');
@@ -516,33 +274,59 @@
     const currentYear = new Date().getFullYear();
     for (let y = currentYear; y >= 1940; y--) {
       const wareki = getWareki(y);
-      const label = wareki ? `${y}年（${wareki}）` : `${y}年`;
-      yearSelect.add(new Option(label, y));
+      yearSelect.add(new Option(wareki ? `${y}年（${wareki}）` : `${y}年`, y));
     }
     for (let m = 1; m <= 12; m++) monthSelect.add(new Option(`${m}月`, m));
     for (let d = 1; d <= 31; d++) daySelect.add(new Option(`${d}日`, d));
 
-    // 各地方の市区町村リストキャッシュ
     let cityDataList = [];
 
-    // 地方選択の変更に伴い該当する地方JSONをロードする
+    // 地方JSONの読み込み（フォールバック機能付き）
     async function loadRegionJson(regionKey) {
-      try {
-        const response = await fetch(`./${regionKey}.json`);
-        if (!response.ok) throw new Error('JSON読み込みエラー');
-        cityDataList = await response.json();
-        
-        // datalist の更新
-        const datalist = document.getElementById('cityDatalist');
-        datalist.innerHTML = '';
-        cityDataList.forEach(item => {
-          const opt = document.createElement('option');
-          opt.value = item.city;
-          datalist.appendChild(opt);
-        });
-      } catch (err) {
-        console.error('JSONデータの取得に失敗しました:', err);
-        cityDataList = [];
+      const statusMsg = document.getElementById('statusMsg');
+      statusMsg.className = 'status-msg';
+      statusMsg.innerText = '市区町村データを読み込み中...';
+
+      // 候補パス（uあり・uなしの両方を自動試行）
+      const possiblePaths = [
+        `./${regionKey}.json`,
+        `./${regionKey.replace('kanto', 'kantou').replace('tohoku', 'touhoku')}.json`
+      ];
+
+      let response = null;
+      for (const path of possiblePaths) {
+        try {
+          const res = await fetch(path);
+          if (res.ok) {
+            response = res;
+            break;
+          }
+        } catch (e) {}
+      }
+
+      if (response) {
+        try {
+          cityDataList = await response.json();
+          const datalist = document.getElementById('cityDatalist');
+          datalist.innerHTML = '';
+          
+          cityDataList.forEach(item => {
+            const cityName = item.city || item.name || item.cityName;
+            if (cityName) {
+              const opt = document.createElement('option');
+              opt.value = cityName;
+              datalist.appendChild(opt);
+            }
+          });
+
+          statusMsg.innerText = `✓ ${cityDataList.length}件の市区町村候補を読み込みました`;
+        } catch (e) {
+          statusMsg.className = 'status-msg error';
+          statusMsg.innerText = '✕ JSON形式が正しくありません';
+        }
+      } else {
+        statusMsg.className = 'status-msg error';
+        statusMsg.innerText = `✕ ${regionKey}.json が見つかりません (404 Error)`;
       }
     }
 
@@ -552,12 +336,11 @@
       loadRegionJson(e.target.value);
     });
 
-    // 初期読み込み（デフォルト：中部地方）
+    // 初期ロード
     loadRegionJson(regionSelect.value);
 
     let currentData = null;
 
-    // 天気マッピング
     const weatherMap = {
       0: { text: "快晴", icon: "☀️", simple: "快晴" },
       1: { text: "晴れ", icon: "🌤️", simple: "晴れ" },
@@ -593,7 +376,6 @@
       return "冬";
     }
 
-    // モーダル開閉
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
@@ -602,16 +384,14 @@
     document.getElementById('btnAbout').addEventListener('click', () => openModal('aboutModal'));
     document.getElementById('openShareModalBtn').addEventListener('click', () => openModal('shareModal'));
 
-    // フォーム送信
     document.getElementById('weatherForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const cityInputVal = document.getElementById('cityInput').value.trim();
+      const matchedCity = cityDataList.find(item => (item.city || item.name || item.cityName) === cityInputVal);
       
-      // 入力された市区町村の厳密な存在チェック
-      const matchedCity = cityDataList.find(item => item.city === cityInputVal);
       if (!matchedCity) {
-        alert('選択した地方の候補（サジェスト）の中から正しい市区町村名を選択してください。');
+        alert('候補リストに存在する正しい市区町村名を入力・選択してください。');
         return;
       }
 
@@ -623,11 +403,13 @@
       const month = String(monthSelect.value).padStart(2, '0');
       const day = String(daySelect.value).padStart(2, '0');
       const dateStr = `${year}-${month}-${day}`;
-
       const regionText = regionSelect.options[regionSelect.selectedIndex].text;
 
+      const lat = matchedCity.lat || matchedCity.latitude;
+      const lon = matchedCity.lon || matchedCity.lng || matchedCity.longitude;
+
       try {
-        const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${matchedCity.lat}&longitude=${matchedCity.lon}&start_date=${dateStr}&end_date=${dateStr}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max&timezone=Asia%2FTokyo`;
+        const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${dateStr}&end_date=${dateStr}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max&timezone=Asia%2FTokyo`;
         
         const res = await fetch(url);
         const data = await res.json();
@@ -640,17 +422,18 @@
           const code = data.daily.weather_code[0];
           const weatherInfo = getWeatherLabel(code);
           const warekiStr = getWareki(parseInt(year));
+          const cityName = matchedCity.city || matchedCity.name || matchedCity.cityName;
 
           currentData = {
             year, month: monthSelect.value, day: daySelect.value,
             wareki: warekiStr,
-            region: regionText, city: matchedCity.city,
+            region: regionText, city: cityName,
             weatherText: weatherInfo.text, weatherSimple: weatherInfo.simple,
             maxTemp, minTemp, precip, wind
           };
 
           const warekiDisp = warekiStr ? `（${warekiStr}）` : '';
-          document.getElementById('resDateLoc').innerText = `${year}年${warekiDisp}${monthSelect.value}月${daySelect.value}日（${regionText} ${matchedCity.city}）`;
+          document.getElementById('resDateLoc').innerText = `${year}年${warekiDisp}${monthSelect.value}月${daySelect.value}日（${regionText} ${cityName}）`;
           document.getElementById('resWeather').innerText = weatherInfo.text;
           document.getElementById('resTemps').innerText = `最高 ${maxTemp}℃ / 最低 ${minTemp}℃`;
           document.getElementById('resDetails').innerText = `降水量: ${precip}mm / 最大風速: ${wind}m/s`;
@@ -664,17 +447,14 @@
       }
     });
 
-    // シェア文面生成（URL自動付与）
     function buildShareText() {
       if (!currentData) return '';
-
       const level = document.querySelector('input[name="privacyLevel"]:checked').value;
       const season = getSeason(parseInt(currentData.month));
       const roundMax = Math.round(currentData.maxTemp);
       const appUrl = window.location.href;
 
       let body = '';
-
       if (level === 'season') {
         body = `${currentData.region}で${season}に生まれた私の日の空模様は【${currentData.weatherSimple} / 最高気温${roundMax}℃前後】でした！`;
       } else if (level === 'birthday') {
@@ -683,33 +463,24 @@
         const warekiDisp = currentData.wareki ? `(${currentData.wareki})` : '';
         body = `${currentData.year}年${warekiDisp}${currentData.month}月${currentData.day}日 ${currentData.region}${currentData.city}で生まれた日の空模様は【${currentData.weatherText}】最高${currentData.maxTemp}℃ / 最低${currentData.minTemp}℃ / 降水量${currentData.precip}mm / 最大風速${currentData.wind}m/s でした！`;
       }
-
       return `${body}\n#私が生まれた日の空模様\n${appUrl}`;
     }
 
-    // シェアボタンのイベント処理
     document.getElementById('shareXBtn').addEventListener('click', () => {
-      const text = encodeURIComponent(buildShareText());
-      window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(buildShareText())}`, '_blank');
     });
 
     document.getElementById('shareLineBtn').addEventListener('click', () => {
-      const text = encodeURIComponent(buildShareText());
-      window.open(`https://line.me/R/msg/text/?${text}`, '_blank');
+      window.open(`https://line.me/R/msg/text/?${encodeURIComponent(buildShareText())}`, '_blank');
     });
 
     document.getElementById('shareWebBtn').addEventListener('click', async () => {
       const text = buildShareText();
       if (navigator.share) {
-        try {
-          await navigator.share({
-            title: '私が生まれた日の空模様',
-            text: text
-          });
-        } catch (err) {}
+        try { await navigator.share({ title: '私が生まれた日の空模様', text: text }); } catch (err) {}
       } else {
         await navigator.clipboard.writeText(text);
-        alert('シェア用テキスト（URL付き）をクリップボードにコピーしました！');
+        alert('シェア用テキストをクリップボードにコピーしました！');
       }
     });
   </script>
