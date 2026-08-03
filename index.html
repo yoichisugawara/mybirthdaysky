@@ -163,8 +163,8 @@
 
   <div class="container">
     <div class="header">
-      <div class="app-title">私が生まれた日の空模様</div>
-      <div class="subtitle">1940年以降の過去の天気を再現</div>
+      <div class="app-title">私が生まれた日の空模様☀️</div>
+      <div class="subtitle">1940年以降の過去の天気を調べてみよう</div>
       
       <div class="nav-buttons">
         <button type="button" class="nav-btn" id="btnUsage">📖 使い方</button>
@@ -229,6 +229,8 @@
         <p>地方を選択し、市区町村名欄をタップすると候補一覧が表示されます。入力して絞り込むこともできます。</p>
         <h4 style="margin-top: 10px;">2. 空模様を検索</h4>
         <p>「空模様を検索する」ボタンを押すと、該当する位置情報から当時の詳細な天気を再現します。</p>
+                <p>SNSやメッセージへの共有は、プライバシーに配慮したモードがあります。</p>
+
       </div>
       <button type="button" class="btn-modal-close" onclick="closeModal('usageModal')">閉じる</button>
     </div>
@@ -236,7 +238,7 @@
 
   <div id="pwaInfoModal" class="modal-overlay">
     <div class="modal-content">
-      <div class="modal-title">📱 スマホへの追加方法（PWA）</div>
+      <div class="modal-title">📱 スマホへの追加方法（PWAアプリ化）</div>
       <div class="modal-body-text">
         <p>iPhone(Safari): 共有ボタン →「ホーム画面に追加」<br>Android(Chrome): メニュー(⋮) →「ホーム画面に追加」</p>
       </div>
@@ -248,7 +250,7 @@
     <div class="modal-content">
       <div class="modal-title">ℹ️ 気象情報源について</div>
       <div class="modal-body-text">
-        <p>Open-Meteo API を利用し、1940年以降の全球気象データを再現しています。</p>
+        <p>Open-Meteo API を利用し、1940年以降の全球気象データを再現しています。地方別に分割されたローカル地名データベースと、気象APIサービスを利用して過去の気象データを高精度に計算します。</p>
       </div>
       <button type="button" class="btn-modal-close" onclick="closeModal('aboutModal')">閉じる</button>
     </div>
