@@ -4,6 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>私が生まれた日の空模様</title>
+
+  <!-- Google アナリティクス (GA4) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-7N43XQ844K"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-7N43XQ844K');
+  </script>
+
   <style>
     :root {
       --primary-color: #0284c7;
@@ -44,7 +55,6 @@
       border: 1px solid #e0f2fe;
     }
 
-    /* ヘッダー＆メニューエリア */
     .header {
       text-align: center;
       margin-bottom: 20px;
@@ -87,7 +97,6 @@
       background: #e0f2fe;
     }
 
-    /* フォーム設定 */
     .form-group {
       margin-bottom: 16px;
     }
@@ -174,7 +183,17 @@
       font-size: 1.05rem;
       font-weight: 600;
       color: #0369a1;
+      margin-bottom: 12px;
+    }
+
+    .result-details {
+      font-size: 0.85rem;
+      color: var(--text-sub);
       margin-bottom: 20px;
+      background: rgba(255, 255, 255, 0.6);
+      padding: 8px 12px;
+      border-radius: 8px;
+      display: inline-block;
     }
 
     .btn-share-open {
@@ -192,62 +211,6 @@
       justify-content: center;
       gap: 8px;
       box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
-    }
-
-    /* PWAインストールバナー */
-    .pwa-banner {
-      display: none; 
-      position: fixed; 
-      bottom: 16px; 
-      left: 16px; 
-      right: 16px;
-      margin: 0 auto;
-      max-width: 440px; 
-      background: #fff; 
-      padding: 16px;
-      border-radius: 16px; 
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
-      z-index: 1100;
-      border: 2px solid var(--primary-color); 
-      text-align: left;
-      box-sizing: border-box;
-    }
-
-    .pwa-banner-title {
-      font-weight: bold;
-      font-size: 0.95rem;
-      margin-bottom: 4px;
-    }
-
-    .pwa-banner-text {
-      font-size: 0.85rem;
-      color: var(--text-sub);
-      margin-bottom: 12px;
-    }
-
-    .pwa-btn-group {
-      display: flex;
-      gap: 8px;
-    }
-
-    .btn-pwa-install {
-      flex: 1;
-      padding: 8px;
-      background: var(--primary-color);
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .btn-pwa-dismiss {
-      padding: 8px 12px;
-      background: #f1f5f9;
-      color: var(--text-sub);
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
     }
 
     /* モーダル共通スタイル */
@@ -297,39 +260,50 @@
       margin: 12px 0 4px 0;
     }
 
-    /* シェアモーダル用選択肢 */
+    /* シェアモーダル用（ラジオボタン・押しやすさ改善） */
     .privacy-options {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
       margin-bottom: 20px;
     }
 
     .privacy-option {
       display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      padding: 12px;
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      border: 2px solid #e2e8f0;
+      border-radius: 14px;
       cursor: pointer;
       background: #f8fafc;
+      transition: border-color 0.2s, background-color 0.2s;
     }
 
-    .privacy-option input {
-      width: auto;
-      margin-top: 3px;
+    .privacy-option:hover {
+      border-color: #bae6fd;
+      background-color: #f0f9ff;
+    }
+
+    /* 大きなラジオボタン */
+    .privacy-option input[type="radio"] {
+      width: 22px;
+      height: 22px;
+      accent-color: var(--primary-color);
+      cursor: pointer;
+      flex-shrink: 0;
     }
 
     .option-label {
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       font-weight: bold;
       color: #0f172a;
     }
 
     .option-desc {
-      font-size: 0.78rem;
+      font-size: 0.8rem;
       color: var(--text-sub);
+      margin-top: 2px;
     }
 
     .share-actions {
@@ -387,7 +361,6 @@
       <div class="app-title">私が生まれた日の空模様</div>
       <div class="subtitle">1940年以降の過去の天気を再現</div>
       
-      <!-- ヘッダーナビゲーションボタン -->
       <div class="nav-buttons">
         <button type="button" class="nav-btn" id="btnUsage">📖 使い方</button>
         <button type="button" class="nav-btn" id="btnPwaInfo">📱 アプリ化</button>
@@ -397,7 +370,7 @@
 
     <form id="weatherForm">
       <div class="form-group">
-        <label>生年月日</label>
+        <label>生年月日（和暦併記）</label>
         <div class="form-row">
           <select id="yearSelect" required></select>
           <select id="monthSelect" required></select>
@@ -405,24 +378,26 @@
         </div>
       </div>
 
-      <!-- 地方選択と市区町村テキスト入力 -->
+      <!-- 地方選択 -->
       <div class="form-group">
         <label>出生地の地方</label>
         <select id="regionSelect" required>
-          <option value="北海道地方">北海道地方</option>
-          <option value="東北地方">東北地方</option>
-          <option value="関東地方">関東地方</option>
-          <option value="中部地方">中部地方</option>
-          <option value="近畿地方">近畿地方</option>
-          <option value="中国地方">中国地方</option>
-          <option value="四国地方">四国地方</option>
-          <option value="九州・沖縄地方">九州・沖縄地方</option>
+          <option value="hokkaido">北海道地方</option>
+          <option value="touhoku">東北地方</option>
+          <option value="kantou">関東地方</option>
+          <option value="chubu" selected>中部地方</option>
+          <option value="kinki">近畿地方</option>
+          <option value="chugoku">中国地方</option>
+          <option value="shikoku">四国地方</option>
+          <option value="kyushu">九州・沖縄地方</option>
         </select>
       </div>
 
+      <!-- JSON連動のサジェスト付き市区町村入力 -->
       <div class="form-group">
-        <label>市区町村名（テキスト入力）</label>
-        <input type="text" id="cityInput" placeholder="例：静岡市、浜松市中区など" required />
+        <label>市区町村名（候補から選択）</label>
+        <input type="text" id="cityInput" list="cityDatalist" placeholder="例：静岡市、浜松市天竜区など" autocomplete="off" required />
+        <datalist id="cityDatalist"></datalist>
       </div>
 
       <button type="submit" class="btn-submit" id="submitBtn">空模様を検索する</button>
@@ -432,21 +407,10 @@
       <div id="resDateLoc" class="result-date-location"></div>
       <div id="resWeather" class="result-weather-main"></div>
       <div id="resTemps" class="result-temps"></div>
+      <div id="resDetails" class="result-details"></div>
       <button type="button" class="btn-share-open" id="openShareModalBtn">
         📤 SNS・メッセージで共有する
       </button>
-    </div>
-  </div>
-
-  <!-- PWAホーム追加案内バナー -->
-  <div id="pwaBanner" class="pwa-banner">
-    <div class="pwa-banner-title">📱 ホーム画面に追加しませんか？</div>
-    <div class="pwa-banner-text" id="pwaBannerText">
-      アプリのように全画面表示でスムーズに呼び出せるようになります！
-    </div>
-    <div class="pwa-btn-group">
-      <button type="button" class="btn-pwa-install" id="pwaActionBtn">追加する</button>
-      <button type="button" class="btn-pwa-dismiss" id="pwaDismissBtn">あとで</button>
     </div>
   </div>
 
@@ -456,11 +420,11 @@
       <div class="modal-title">📖 使い方</div>
       <div class="modal-body-text">
         <h4>1. フォームに入力</h4>
-        <p>「生年月日」「地方」を選択し、「市区町村名」をテキストで入力してください。</p>
+        <p>「生年月日（和暦対応）」「地方」を選択すると、その地方の市区町村が候補（サジェスト）として表示されます。</p>
         <h4>2. 空模様を検索</h4>
-        <p>「空模様を検索する」ボタンを押すと、入力した市区町村の位置情報から当時の天気を再現します。</p>
+        <p>「空模様を検索する」ボタンを押すと、該当する位置情報から当時の詳細な天気を再現します。</p>
         <h4>3. 安全にシェア</h4>
-        <p>「共有する」ボタンから、生年月日や場所を伏せた状態で安全にSNSやLINEへ送信できます。</p>
+        <p>「共有する」ボタンから、プライバシーレベルに合わせて安全にSNSへ送信できます。</p>
       </div>
       <button type="button" class="btn-modal-close" onclick="closeModal('usageModal')">閉じる</button>
     </div>
@@ -475,7 +439,7 @@
         <h4>iPhone (Safari) の場合</h4>
         <p>画面下部の「共有ボタン (↑)」をタップし、「ホーム画面に追加」を選択してください。</p>
         <h4>Android (Chrome) の場合</h4>
-        <p>画面右上の「3点メニュー (⋮)」をタップし、「ホーム画面に追加」または「アプリをインストール」を選択してください。</p>
+        <p>画面右上の「3点メニュー (⋮)」をタップし、「ホーム画面に追加」を選択してください。</p>
       </div>
       <button type="button" class="btn-modal-close" onclick="closeModal('pwaInfoModal')">閉じる</button>
     </div>
@@ -487,7 +451,7 @@
       <div class="modal-title">ℹ️ 気象情報源について</div>
       <div class="modal-body-text">
         <p>本アプリで利用している過去の気象データは、オープンソースの気象APIサービス <strong>Open-Meteo</strong> から取得しています。</p>
-        <p>気象庁などの観測データや全球再解析データ（ERA5等）を統合した高精度なデータソースに基づき、1940年以降の天気を再現しています。</p>
+        <p>全球再解析データ（ERA5等）を統合したデータソースに基づき、1940年以降の天気を再現しています。</p>
       </div>
       <button type="button" class="btn-modal-close" onclick="closeModal('aboutModal')">閉じる</button>
     </div>
@@ -518,8 +482,8 @@
         <label class="privacy-option">
           <input type="radio" name="privacyLevel" value="full">
           <div>
-            <div class="option-label">📢 すべて表示</div>
-            <div class="option-desc">生年月日と市区町村名をそのまま表示します。</div>
+            <div class="option-label">📢 すべて表示（フル）</div>
+            <div class="option-desc">生年月日・市区町村・最高最低気温・降水量・風速をすべて表示します。</div>
           </div>
         </label>
       </div>
@@ -535,6 +499,15 @@
   </div>
 
   <script>
+    // 和暦変換
+    function getWareki(year) {
+      if (year >= 2019) return `令和${year - 2018 === 1 ? '元' : year - 2018}年`;
+      if (year >= 1989) return `平成${year - 1988 === 1 ? '元' : year - 1988}年`;
+      if (year >= 1926) return `昭和${year - 1925 === 1 ? '元' : year - 1925}年`;
+      if (year >= 1912) return `大正${year - 1911 === 1 ? '元' : year - 1911}年`;
+      return '';
+    }
+
     // ドロップダウン初期化
     const yearSelect = document.getElementById('yearSelect');
     const monthSelect = document.getElementById('monthSelect');
@@ -542,25 +515,55 @@
 
     const currentYear = new Date().getFullYear();
     for (let y = currentYear; y >= 1940; y--) {
-      yearSelect.add(new Option(`${y}年`, y));
+      const wareki = getWareki(y);
+      const label = wareki ? `${y}年（${wareki}）` : `${y}年`;
+      yearSelect.add(new Option(label, y));
     }
-    for (let m = 1; m <= 12; m++) {
-      monthSelect.add(new Option(`${m}月`, m));
+    for (let m = 1; m <= 12; m++) monthSelect.add(new Option(`${m}月`, m));
+    for (let d = 1; d <= 31; d++) daySelect.add(new Option(`${d}日`, d));
+
+    // 各地方の市区町村リストキャッシュ
+    let cityDataList = [];
+
+    // 地方選択の変更に伴い該当する地方JSONをロードする
+    async function loadRegionJson(regionKey) {
+      try {
+        const response = await fetch(`./${regionKey}.json`);
+        if (!response.ok) throw new Error('JSON読み込みエラー');
+        cityDataList = await response.json();
+        
+        // datalist の更新
+        const datalist = document.getElementById('cityDatalist');
+        datalist.innerHTML = '';
+        cityDataList.forEach(item => {
+          const opt = document.createElement('option');
+          opt.value = item.city;
+          datalist.appendChild(opt);
+        });
+      } catch (err) {
+        console.error('JSONデータの取得に失敗しました:', err);
+        cityDataList = [];
+      }
     }
-    for (let d = 1; d <= 31; d++) {
-      daySelect.add(new Option(`${d}日`, d));
-    }
+
+    const regionSelect = document.getElementById('regionSelect');
+    regionSelect.addEventListener('change', (e) => {
+      document.getElementById('cityInput').value = '';
+      loadRegionJson(e.target.value);
+    });
+
+    // 初期読み込み（デフォルト：中部地方）
+    loadRegionJson(regionSelect.value);
 
     let currentData = null;
 
-    // 詳細な天気マッピング表
+    // 天気マッピング
     const weatherMap = {
       0: { text: "快晴", icon: "☀️", simple: "快晴" },
       1: { text: "晴れ", icon: "🌤️", simple: "晴れ" },
       2: { text: "一部曇り", icon: "⛅", simple: "晴れ・曇り" },
       3: { text: "曇り", icon: "☁️", simple: "曇り" },
       45: { text: "霧", icon: "🌫️", simple: "曇り" },
-      48: { text: "霧氷", icon: "🌫️", simple: "曇り" },
       51: { text: "霧雨", icon: "🌧️", simple: "雨" },
       61: { text: "弱い雨", icon: "☔", simple: "雨" },
       63: { text: "雨", icon: "☔", simple: "雨" },
@@ -575,10 +578,7 @@
     function getWeatherLabel(code) {
       if (weatherMap[code]) {
         const item = weatherMap[code];
-        return {
-          text: `${item.text} ${item.icon}`,
-          simple: item.simple
-        };
+        return { text: `${item.text} ${item.icon}`, simple: item.simple };
       }
       if (code <= 3) return { text: "晴れ/曇り ⛅", simple: "晴れ・曇り" };
       if (code <= 67) return { text: "雨 ☔", simple: "雨" };
@@ -593,40 +593,28 @@
       return "冬";
     }
 
-    // モーダル開閉関数
-    function openModal(id) {
-      document.getElementById(id).style.display = 'flex';
-    }
-    function closeModal(id) {
-      document.getElementById(id).style.display = 'none';
-    }
+    // モーダル開閉
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-    // イベントリスナー
     document.getElementById('btnUsage').addEventListener('click', () => openModal('usageModal'));
     document.getElementById('btnPwaInfo').addEventListener('click', () => openModal('pwaInfoModal'));
     document.getElementById('btnAbout').addEventListener('click', () => openModal('aboutModal'));
     document.getElementById('openShareModalBtn').addEventListener('click', () => openModal('shareModal'));
 
-    // 市区町村名から緯度経度を取得するAPI関数
-    async function getCoordinates(cityName) {
-      const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityName)}&count=1&language=ja&format=json`;
-      const res = await fetch(geoUrl);
-      const data = await res.json();
-      
-      if (data.results && data.results.length > 0) {
-        return {
-          lat: data.results[0].latitude,
-          lon: data.results[0].longitude,
-          name: data.results[0].name
-        };
-      }
-      return null;
-    }
-
-    // フォーム送信処理
+    // フォーム送信
     document.getElementById('weatherForm').addEventListener('submit', async (e) => {
       e.preventDefault();
+
+      const cityInputVal = document.getElementById('cityInput').value.trim();
       
+      // 入力された市区町村の厳密な存在チェック
+      const matchedCity = cityDataList.find(item => item.city === cityInputVal);
+      if (!matchedCity) {
+        alert('選択した地方の候補（サジェスト）の中から正しい市区町村名を選択してください。');
+        return;
+      }
+
       const submitBtn = document.getElementById('submitBtn');
       submitBtn.innerText = '検索中...';
       submitBtn.disabled = true;
@@ -636,38 +624,36 @@
       const day = String(daySelect.value).padStart(2, '0');
       const dateStr = `${year}-${month}-${day}`;
 
-      const region = document.getElementById('regionSelect').value;
-      const cityInput = document.getElementById('cityInput').value.trim();
+      const regionText = regionSelect.options[regionSelect.selectedIndex].text;
 
       try {
-        // 市区町村の緯度経度取得
-        let location = await getCoordinates(cityInput);
+        const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${matchedCity.lat}&longitude=${matchedCity.lon}&start_date=${dateStr}&end_date=${dateStr}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max&timezone=Asia%2FTokyo`;
         
-        // 検索で見つからなかった場合のフォールバック（東京をデフォルト値に）
-        if (!location) {
-          location = { lat: 35.6895, lon: 139.6917, name: cityInput };
-        }
-
-        const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${location.lat}&longitude=${location.lon}&start_date=${dateStr}&end_date=${dateStr}&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia%2FTokyo`;
         const res = await fetch(url);
         const data = await res.json();
 
         if (data.daily) {
           const maxTemp = data.daily.temperature_2m_max[0];
           const minTemp = data.daily.temperature_2m_min[0];
+          const precip = data.daily.precipitation_sum[0] ?? 0;
+          const wind = data.daily.wind_speed_10m_max[0] ?? 0;
           const code = data.daily.weather_code[0];
           const weatherInfo = getWeatherLabel(code);
+          const warekiStr = getWareki(parseInt(year));
 
           currentData = {
             year, month: monthSelect.value, day: daySelect.value,
-            region: region, city: cityInput,
+            wareki: warekiStr,
+            region: regionText, city: matchedCity.city,
             weatherText: weatherInfo.text, weatherSimple: weatherInfo.simple,
-            maxTemp, minTemp
+            maxTemp, minTemp, precip, wind
           };
 
-          document.getElementById('resDateLoc').innerText = `${year}年${monthSelect.value}月${daySelect.value}日（${region} ${cityInput}）`;
+          const warekiDisp = warekiStr ? `（${warekiStr}）` : '';
+          document.getElementById('resDateLoc').innerText = `${year}年${warekiDisp}${monthSelect.value}月${daySelect.value}日（${regionText} ${matchedCity.city}）`;
           document.getElementById('resWeather').innerText = weatherInfo.text;
           document.getElementById('resTemps').innerText = `最高 ${maxTemp}℃ / 最低 ${minTemp}℃`;
+          document.getElementById('resDetails').innerText = `降水量: ${precip}mm / 最大風速: ${wind}m/s`;
           document.getElementById('resultCard').style.display = 'block';
         }
       } catch (err) {
@@ -678,24 +664,30 @@
       }
     });
 
-    // シェア文章生成
+    // シェア文面生成（URL自動付与）
     function buildShareText() {
       if (!currentData) return '';
 
       const level = document.querySelector('input[name="privacyLevel"]:checked').value;
       const season = getSeason(parseInt(currentData.month));
       const roundMax = Math.round(currentData.maxTemp);
+      const appUrl = window.location.href;
+
+      let body = '';
 
       if (level === 'season') {
-        return `${currentData.region}で${season}に生まれた私の日の空模様は【${currentData.weatherSimple} / 最高気温${roundMax}℃前後】でした！ #私が生まれた日の空模様`;
+        body = `${currentData.region}で${season}に生まれた私の日の空模様は【${currentData.weatherSimple} / 最高気温${roundMax}℃前後】でした！`;
       } else if (level === 'birthday') {
-        return `${currentData.month}月${currentData.day}日生まれ（${currentData.region}）の私が生まれた日の空は【${currentData.weatherText}】最高${currentData.maxTemp}℃でした！ #私が生まれた日の空模様`;
+        body = `${currentData.month}月${currentData.day}日生まれ（${currentData.region}）の私が生まれた日の空は【${currentData.weatherText}】最高${currentData.maxTemp}℃でした！`;
       } else {
-        return `${currentData.year}年${currentData.month}月${currentData.day}日 ${currentData.region}${currentData.city}で生まれた日の空模様は【${currentData.weatherText}】最高${currentData.maxTemp}℃ / 最低${currentData.minTemp}℃ でした！ #私が生まれた日の空模様`;
+        const warekiDisp = currentData.wareki ? `(${currentData.wareki})` : '';
+        body = `${currentData.year}年${warekiDisp}${currentData.month}月${currentData.day}日 ${currentData.region}${currentData.city}で生まれた日の空模様は【${currentData.weatherText}】最高${currentData.maxTemp}℃ / 最低${currentData.minTemp}℃ / 降水量${currentData.precip}mm / 最大風速${currentData.wind}m/s でした！`;
       }
+
+      return `${body}\n#私が生まれた日の空模様\n${appUrl}`;
     }
 
-    // 各シェアボタン処理
+    // シェアボタンのイベント処理
     document.getElementById('shareXBtn').addEventListener('click', () => {
       const text = encodeURIComponent(buildShareText());
       window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
@@ -717,34 +709,8 @@
         } catch (err) {}
       } else {
         await navigator.clipboard.writeText(text);
-        alert('シェア用テキストをクリップボードにコピーしました！');
+        alert('シェア用テキスト（URL付き）をクリップボードにコピーしました！');
       }
-    });
-
-    // PWA案内バナー制御
-    const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    const pwaBanner = document.getElementById('pwaBanner');
-    const pwaActionBtn = document.getElementById('pwaActionBtn');
-
-    function showPwaBanner() {
-      if (window.matchMedia('(display-mode: standalone)').matches) return;
-
-      if (isiOS) {
-        document.getElementById('pwaBannerText').innerText = "Safariの「共有ボタン (↑)」をタップし、「ホーム画面に追加」を選択してください。";
-        pwaActionBtn.innerText = "OK";
-      } else {
-        document.getElementById('pwaBannerText').innerText = "アプリとしてインストールすると、ホーム画面から簡単に開けるようになります！";
-        pwaActionBtn.innerText = "追加する";
-      }
-      pwaBanner.style.display = 'block';
-    }
-
-    document.getElementById('pwaDismissBtn').addEventListener('click', () => {
-      pwaBanner.style.display = 'none';
-    });
-
-    window.addEventListener('load', () => {
-      setTimeout(showPwaBanner, 1500);
     });
   </script>
 </body>
