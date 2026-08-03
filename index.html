@@ -4,161 +4,148 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>私が生まれた日の空模様</title>
-
-<!-- Google アナリティクス -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-7N43XQ844K"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-
-    gtag('config', 'G-7N43XQ844K');
-  </script>
-  
-  <!-- PWA関連の設定 -->
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="icon.svg">
-  <meta name="theme-color" content="#4a90e2">
-
   <style>
     :root {
-      --primary-color: #4a90e2;
-      --bg-color: #f0f4f8;
+      --primary-color: #3b82f6;
+      --primary-hover: #2563eb;
+      --bg-color: #f8fafc;
       --card-bg: #ffffff;
-      --text-color: #333333;
-      --sub-text: #666666;
+      --text-color: #1e293b;
+      --text-sub: #64748b;
+      --border-color: #e2e8f0;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       background-color: var(--bg-color);
       color: var(--text-color);
+      line-height: 1.6;
+      padding: 20px;
       display: flex;
       justify-content: center;
-      align-items: center;
+      align-items: flex-start;
       min-height: 100vh;
-      padding: 16px;
     }
 
     .container {
-      position: relative;
-      background-color: var(--card-bg);
       width: 100%;
-      max-width: 480px;
-      padding: 24px 20px;
+      max-width: 500px;
+      background: var(--card-bg);
       border-radius: 20px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+      padding: 24px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      text-align: center;
+      margin-bottom: 8px;
+      color: var(--text-color);
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      text-align: center;
+      color: var(--text-sub);
+      margin-bottom: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text-color);
+    }
+
+    select, input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      font-size: 1rem;
+      background-color: #fff;
+      appearance: none;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      background-color: var(--primary-color);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      margin-top: 8px;
+    }
+
+    .btn-submit:hover {
+      background-color: var(--primary-hover);
+    }
+
+    /* 結果エリア */
+    .result-card {
+      display: none;
+      margin-top: 24px;
+      padding: 20px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+      border: 1px solid #bae6fd;
       text-align: center;
     }
 
-.header-nav {
-      /* absolute をやめて、カード内の上部に自然に配置 */
+    .result-date-location {
+      font-size: 0.9rem;
+      color: var(--text-sub);
+      margin-bottom: 8px;
+    }
+
+    .result-weather-main {
+      font-size: 2.2rem;
+      font-weight: bold;
+      margin: 12px 0;
+    }
+
+    .result-temps {
+      font-size: 1.1rem;
+      margin-bottom: 16px;
+    }
+
+    .btn-share-open {
+      width: 100%;
+      padding: 12px;
+      background-color: #0f172a;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
       display: flex;
-      justify-content: flex-end;
+      align-items: center;
+      justify-content: center;
       gap: 8px;
-      margin-bottom: 12px;
     }
-
-    .nav-btn {
-      background: #f0f4f8; border: none;
-      padding: 6px 10px; border-radius: 12px;
-      font-size: 0.78rem; cursor: pointer;
-      color: var(--sub-text); font-weight: bold;
-      display: flex; align-items: center; gap: 4px;
-    }
-    .nav-btn:hover { background: #e0e8f0; }
-
-    h1 { font-size: 1.4rem; color: var(--primary-color); margin-top: 0; margin-bottom: 6px; }
-
-.form-group { text-align: left; margin-bottom: 16px; position: relative; }
-label { display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 4px; color: #555; }
-.label-hint { display: block; font-size: 0.75rem; color: var(--sub-text); margin-bottom: 6px; }
-
-.date-selectors { display: flex; gap: 6px; }
-
-select, input[type="text"] {
-  width: 100%;
-  padding: 10px 8px; border: 1px solid #ccc;
-  border-radius: 10px; font-size: 0.95rem; outline: none; background: #fff;
-}
-
-    .select-era { flex: 1.3; }
-    .select-year { flex: 1; }
-    .select-month { flex: 0.9; }
-    .select-day { flex: 0.9; }
-    input[type="text"] { width: 100%; padding: 12px; }
-
-    select:disabled, input[type="text"]:disabled {
-      background-color: #e9ecef;
-      cursor: not-allowed;
-    }
-
-    .suggest-list {
-      position: absolute; top: 100%; left: 0; right: 0;
-      background: #fff; border: 1px solid #ddd; border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-height: 240px;
-      overflow-y: auto; z-index: 100; display: none; margin-top: 4px;
-    }
-
-    .suggest-item {
-      padding: 10px 12px; font-size: 0.88rem; cursor: pointer;
-      border-bottom: 1px solid #f0f0f0; text-align: left;
-    }
-    .suggest-item:hover { background-color: #f0f7ff; color: var(--primary-color); }
-
-    .btn-search {
-      width: 100%; padding: 14px; background-color: var(--primary-color);
-      color: #fff; border: none; border-radius: 10px;
-      font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 6px;
-    }
-
-    .loading { display: none; margin-top: 20px; font-size: 0.9rem; color: var(--sub-text); }
-
-    .result-card {
-      display: none; margin-top: 20px; padding: 20px;
-      background: linear-gradient(135deg, #e6f2ff 0%, #ffffff 100%);
-      border-radius: 15px; border: 1px solid #d0e3ff;
-      word-break: break-all; overflow-wrap: break-word;
-    }
-
-    .result-date-location { font-size: 0.95rem; font-weight: bold; margin-bottom: 12px; line-height: 1.5; white-space: pre-wrap; }
-    .weather-icon { font-size: 3.8rem; margin-bottom: 6px; }
-    .weather-text { font-size: 1.3rem; font-weight: bold; color: var(--primary-color); margin-bottom: 16px; }
-
-    .temp-container {
-      display: flex; justify-content: space-around; margin-bottom: 16px;
-      background: rgba(255,255,255,0.7); padding: 10px; border-radius: 10px;
-    }
-    .temp-box { font-size: 0.8rem; }
-    .temp-box span { display: block; font-size: 1rem; font-weight: bold; margin-top: 2px; }
-    .temp-max { color: #d9534f; }
-    .temp-min { color: #0275d8; }
-    .precip { color: #5bc0de; }
-
-    .btn-share {
-      width: 100%; padding: 12px; background-color: #25d366; color: #fff;
-      border: none; border-radius: 10px; font-size: 0.9rem; font-weight: bold; cursor: pointer;
-    }
-
-    .share-toast { display: none; margin-top: 8px; font-size: 0.85rem; color: #28a745; font-weight: bold; }
-    .error-msg { display: none; margin-top: 15px; color: #d9534f; font-size: 0.85rem; }
-
-    /* モーダル共通スタイル */
-    .modal-overlay {
-      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; padding: 20px;
-    }
-    .modal-content { background: #fff; padding: 20px; border-radius: 15px; max-width: 400px; width: 100%; text-align: left; font-size: 0.85rem; line-height: 1.6; }
-    .modal-content h3 { margin-bottom: 10px; font-size: 1rem; color: var(--primary-color); }
-    .modal-content ul { margin-left: 20px; margin-bottom: 12px; }
-    .disclaimer { font-size: 0.78rem; color: #777; background: #f8f9fa; padding: 8px 10px; border-radius: 6px; border-left: 3px solid #ccc; margin-top: 10px; }
-    .modal-close-btn { width: 100%; padding: 10px; background: var(--primary-color); color: #fff; border: none; border-radius: 8px; font-weight: bold; margin-top: 12px; cursor: pointer; }
 
     /* PWAインストール案内用バナー */
-  /* PWAインストール案内用バナー（スマホ画面外はみ出し防止版） */
     .pwa-banner {
       display: none; 
       position: fixed; 
@@ -174,93 +161,187 @@ select, input[type="text"] {
       z-index: 1100;
       border: 2px solid var(--primary-color); 
       text-align: left;
-      box-sizing: border-box; /* 枠線やパディングを含めた幅指定 */
+      box-sizing: border-box;
     }
-    .pwa-banner-title { font-weight: bold; color: var(--primary-color); font-size: 0.95rem; margin-bottom: 4px; }
-    .pwa-banner-text { font-size: 0.82rem; color: #555; margin-bottom: 12px; line-height: 1.4; }
-    .pwa-btn-group { display: flex; gap: 8px; }
-    .btn-pwa-install { flex: 2; padding: 8px; background: var(--primary-color); color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-    .btn-pwa-dismiss { flex: 1; padding: 8px; background: #e0e0e0; color: #333; border: none; border-radius: 8px; cursor: pointer; }
 
-    /* チュートリアルモーダル */
-    .tutorial-step { display: none; }
-    .tutorial-step.active { display: block; }
-    .tutorial-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
-    .btn-tut-nav { padding: 8px 16px; background: var(--primary-color); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
-    .btn-tut-nav:disabled { background: #ccc; cursor: not-allowed; }
-    .step-dots { display: flex; gap: 6px; }
-    .dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; }
-    .dot.active { background: var(--primary-color); }
+    .pwa-banner-title {
+      font-weight: bold;
+      font-size: 0.95rem;
+      margin-bottom: 4px;
+    }
+
+    .pwa-banner-text {
+      font-size: 0.85rem;
+      color: var(--text-sub);
+      margin-bottom: 12px;
+    }
+
+    .pwa-btn-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-pwa-install {
+      flex: 1;
+      padding: 8px;
+      background: var(--primary-color);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-pwa-dismiss {
+      padding: 8px 12px;
+      background: #f1f5f9;
+      color: var(--text-sub);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    /* モーダルダイアログ */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .modal-content {
+      background: #fff;
+      width: 100%;
+      max-width: 420px;
+      border-radius: 20px;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+
+    .modal-title {
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .privacy-options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .privacy-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    .privacy-option input {
+      width: auto;
+      margin-top: 3px;
+    }
+
+    .option-label {
+      font-size: 0.9rem;
+      font-weight: bold;
+    }
+
+    .option-desc {
+      font-size: 0.75rem;
+      color: var(--text-sub);
+    }
+
+    .share-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn-share-x {
+      background: #000;
+      color: #fff;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-share-line {
+      background: #06c755;
+      color: #fff;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-share-web {
+      background: #f1f5f9;
+      color: var(--text-color);
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-modal-close {
+      margin-top: 12px;
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: var(--text-sub);
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <div class="header-nav">
-      <button type="button" class="nav-btn" id="pwaInstallBtn" style="display:none;">📱 アプリ化</button>
-      <button type="button" class="nav-btn" id="tutBtn">❓ 使い方</button>
-      <button type="button" class="nav-btn" id="infoBtn">ℹ️ 情報</button>
-    </div>
-
     <h1>私が生まれた日の空模様</h1>
-    <p class="subtitle">あなたが生まれた日の天気と気温をお調べします</p>
+    <div class="subtitle">1940年以降の生年月日から当時の天気を再現</div>
 
     <form id="weatherForm">
-      <!-- (1) 地方を選択 -->
       <div class="form-group">
-        <label for="regionSelect">【1】地方を選択</label>
-        <select id="regionSelect">
-          <option value="">-- 地方を選んでください --</option>
-          <option value="hokkaido">北海道地方</option>
-          <option value="tohoku">東北地方</option>
-          <option value="kanto">関東地方</option>
-          <option value="chubu">中部地方</option>
-          <option value="kinki">近畿地方</option>
-          <option value="chugoku">中国地方</option>
-          <option value="shikoku">四国地方</option>
-          <option value="kyushu_okinawa">九州・沖縄地方</option>
-        </select>
-      </div>
-
-      <!-- (2) 生まれた場所 -->
-      <div class="form-group">
-        <label for="location">【2】生まれた場所（現在の市区町村名）</label>
-        <span class="label-hint">※先に地方を選択してください。候補が出たら選択します。</span>
-        <input type="text" id="location" placeholder="先に地方を選択してください" autocomplete="off" disabled required>
-        <div id="suggestList" class="suggest-list"></div>
-      </div>
-
-      <!-- (3) 生年月日 -->
-      <div class="form-group">
-        <label>【3】生年月日</label>
-        <span class="label-hint">※1940年（昭和15年）以降の空模様をお調べできます</span>
-        <div class="date-selectors">
-          <select id="eraSelect" class="select-era"></select>
-          <select id="yearSelect" class="select-year"></select>
-          <select id="monthSelect" class="select-month"></select>
-          <select id="daySelect" class="select-day"></select>
+        <label>生年月日</label>
+        <div class="form-row">
+          <select id="yearSelect" required></select>
+          <select id="monthSelect" required></select>
+          <select id="daySelect" required></select>
         </div>
       </div>
 
-      <button type="submit" class="btn-search">空模様を見る ☀️</button>
-    </form>
-
-    <div id="loading" class="loading">過去の空の記憶を探しています...</div>
-    <div id="errorMsg" class="error-msg"></div>
-
-    <div id="resultCard" class="result-card">
-      <div id="resultHeader" class="result-date-location"></div>
-      <div id="weatherIcon" class="weather-icon">☀️</div>
-      <div id="weatherText" class="weather-text">晴れ</div>
-
-      <div class="temp-container">
-        <div class="temp-box">最高気温<span id="tempMax" class="temp-max">-- ℃</span></div>
-        <div class="temp-box">最低気温<span id="tempMin" class="temp-min">-- ℃</span></div>
-        <div class="temp-box">降水量<span id="precip" class="precip">-- mm</span></div>
+      <div class="form-group">
+        <label>出生地（都道府県）</label>
+        <select id="prefSelect" required></select>
       </div>
 
-      <button id="shareBtn" type="button" class="btn-share">🔗 結果をシェアする</button>
-      <div id="shareToast" class="share-toast">結果をクリップボードにコピーしました！</div>
+      <button type="submit" class="btn-submit">空模様を検索する</button>
+    </form>
+
+    <div id="resultCard" class="result-card">
+      <div id="resDateLoc" class="result-date-location"></div>
+      <div id="resWeather" class="result-weather-main"></div>
+      <div id="resTemps" class="result-temps"></div>
+      <button type="button" class="btn-share-open" id="openShareModalBtn">
+        📤 SNS・メッセージで共有する
+      </button>
     </div>
   </div>
 
@@ -276,353 +357,267 @@ select, input[type="text"] {
     </div>
   </div>
 
-  <!-- チュートリアルモーダル -->
-  <div id="tutModal" class="modal-overlay">
+  <!-- シェア設定モーダル -->
+  <div id="shareModal" class="modal-overlay">
     <div class="modal-content">
-      <div class="tutorial-step active" data-step="1">
-        <h3>使い方 (1/3): 条件の入力</h3>
-        <p>1. 最初に**「地方」**を選択します。<br>
-        2. 次に生まれた**「市区町村」**を入力し、出てくる候補一覧からタップして選びます。<br>
-        3. 生年月日（1940年以降）を選択します。</p>
-      </div>
-      <div class="tutorial-step" data-step="2">
-        <h3>使い方 (2/3): 結果の確認</h3>
-        <p>「空模様を見る」を押すと、指定した日の**天気・最高/最低気温・降水量**が瞬時に計算されて表示されます！</p>
-      </div>
-      <div class="tutorial-step" data-step="3">
-        <h3>使い方 (3/3): 結果のシェア</h3>
-        <p>「結果をシェアする」ボタンを押すと、スマホの標準共有シートが開き、LINEやSNSでお友達や家族に生まれた日の天気をシェアできます！</p>
+      <div class="modal-title">📱 シェアの設定</div>
+      
+      <div class="privacy-options">
+        <label class="privacy-option">
+          <input type="radio" name="privacyLevel" value="season" checked>
+          <div>
+            <div class="option-label">🔒 季節・天気のみ（おすすめ）</div>
+            <div class="option-desc">年月日と場所を伏せ、季節とざっくりした気温のみ共有します。</div>
+          </div>
+        </label>
+
+        <label class="privacy-option">
+          <input type="radio" name="privacyLevel" value="birthday">
+          <div>
+            <div class="option-label">🎂 月日・天気のみ</div>
+            <div class="option-desc">生年と都道府県以下を伏せ、誕生日当日などのアピールに使えます。</div>
+          </div>
+        </label>
+
+        <label class="privacy-option">
+          <input type="radio" name="privacyLevel" value="full">
+          <div>
+            <div class="option-label">📢 すべて表示</div>
+            <div class="option-desc">生年月日と都道府県をそのまま表示します。</div>
+          </div>
+        </label>
       </div>
 
-      <div class="tutorial-nav">
-        <button type="button" class="btn-tut-nav" id="tutPrevBtn" disabled>前へ</button>
-        <div class="step-dots">
-          <div class="dot active"></div>
-          <div class="dot"></div>
-          <div class="dot"></div>
-        </div>
-        <button type="button" class="btn-tut-nav" id="tutNextBtn">次へ</button>
+      <div class="share-actions">
+        <button type="button" class="btn-share-x" id="shareXBtn">𝕏 (Twitter) で投稿</button>
+        <button type="button" class="btn-share-line" id="shareLineBtn">LINE で送る</button>
+        <button type="button" class="btn-share-web" id="shareWebBtn">🔗 その他のアプリ・メールで共有</button>
       </div>
-    </div>
-  </div>
 
-  <!-- インフォメーションモーダル -->
-  <div id="infoModal" class="modal-overlay">
-    <div class="modal-content">
-      <h3>ℹ️ データ出典・使用技術について</h3>
-      <p>地方別に分割されたローカル地名データベースと、気象APIサービスを利用して過去の気象データを高精度に計算します。</p>
-      <ul>
-        <li><strong>位置情報:</strong> 8地方別JSONファイル</li>
-        <li><strong>気象データ:</strong> Open-Meteo Historical Weather API</li>
-      </ul>
-      <div class="disclaimer">
-        ※本サービスでは過去の公的な再解析気象データを使用しておりますが、局地的な天候の違いや特定の時間帯、詳細な場所によって実際の天気と差異が生じる場合があります。あらかじめご了承ください。
-      </div>
-      <button type="button" class="modal-close-btn" id="modalCloseBtn">閉じる</button>
+      <button type="button" class="btn-modal-close" id="closeShareModalBtn">閉じる</button>
     </div>
   </div>
 
   <script>
-    // Service Worker の登録 (PWA)
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(err => {
-          console.log('ServiceWorker registration failed: ', err);
-        });
-      });
-    }
-
-    const weatherMap = {
-      0: { text: "快晴", icon: "☀️" },
-      1: { text: "晴れ", icon: "🌤️" },
-      2: { text: "一部曇り", icon: "⛅" },
-      3: { text: "曇り", icon: "☁️" },
-      45: { text: "霧", icon: "🌫️" },
-      48: { text: "霧氷", icon: "🌫️" },
-      51: { text: "霧雨", icon: "🌧️" },
-      61: { text: "弱い雨", icon: "☔" },
-      63: { text: "雨", icon: "☔" },
-      65: { text: "強い雨", icon: "🌧️" },
-      71: { text: "弱い雪", icon: "❄️" },
-      73: { text: "雪", icon: "❄️" },
-      75: { text: "強い雪", icon: "☃️" },
-      80: { text: "にわか雨", icon: "🌦️" },
-      95: { text: "雷雨", icon: "⚡" }
-    };
-
-    const weekDays = ["日", "月", "火", "水", "木", "金", "土"];
-    
-    const eras = [
-      { name: "昭和", startYear: 1926, endYear: 1989 },
-      { name: "平成", startYear: 1989, endYear: 2019 },
-      { name: "令和", startYear: 2019, endYear: 2026 },
-      { name: "西暦", startYear: 1940, endYear: 2026 }
+    // 都道府県および地方・座標データ
+    const prefectures = [
+      { name: "北海道", region: "北海道地方", lat: 43.0642, lon: 141.3469 },
+      { name: "青森県", region: "東北地方", lat: 40.8244, lon: 140.7400 },
+      { name: "岩手県", region: "東北地方", lat: 39.7036, lon: 141.1527 },
+      { name: "宮城県", region: "東北地方", lat: 38.2688, lon: 140.8719 },
+      { name: "秋田県", region: "東北地方", lat: 39.7186, lon: 140.1024 },
+      { name: "山形県", region: "東北地方", lat: 38.2404, lon: 140.3633 },
+      { name: "福島県", region: "東北地方", lat: 37.7500, lon: 140.4678 },
+      { name: "茨城県", region: "関東地方", lat: 36.3418, lon: 140.4468 },
+      { name: "栃木県", region: "関東地方", lat: 36.5658, lon: 139.8836 },
+      { name: "群馬県", region: "関東地方", lat: 36.3911, lon: 139.0608 },
+      { name: "埼玉県", region: "関東地方", lat: 35.8574, lon: 139.6489 },
+      { name: "千葉県", region: "関東地方", lat: 35.6047, lon: 140.1233 },
+      { name: "東京都", region: "関東地方", lat: 35.6895, lon: 139.6917 },
+      { name: "神奈川県", region: "関東地方", lat: 35.4478, lon: 139.6425 },
+      { name: "新潟県", region: "中部地方", lat: 37.9022, lon: 139.0236 },
+      { name: "富山県", region: "中部地方", lat: 36.6953, lon: 137.2113 },
+      { name: "石川県", region: "中部地方", lat: 36.5947, lon: 136.6256 },
+      { name: "福井県", region: "中部地方", lat: 36.0652, lon: 136.2216 },
+      { name: "山梨県", region: "中部地方", lat: 35.6639, lon: 138.5683 },
+      { name: "長野県", region: "中部地方", lat: 36.6513, lon: 138.1810 },
+      { name: "岐阜県", region: "東海地方", lat: 35.3912, lon: 136.7223 },
+      { name: "静岡県", region: "東海地方", lat: 34.9769, lon: 138.3831 },
+      { name: "愛知県", region: "東海地方", lat: 35.1802, lon: 136.9066 },
+      { name: "三重県", region: "東海地方", lat: 34.7303, lon: 136.5086 },
+      { name: "滋賀県", region: "近畿地方", lat: 35.0045, lon: 135.8686 },
+      { name: "京都府", region: "近畿地方", lat: 35.0211, lon: 135.7556 },
+      { name: "大阪府", region: "近畿地方", lat: 34.6937, lon: 135.5023 },
+      { name: "兵庫県", region: "近畿地方", lat: 34.6913, lon: 135.1830 },
+      { name: "奈良県", region: "近畿地方", lat: 34.6853, lon: 135.8328 },
+      { name: "和歌山県", region: "近畿地方", lat: 34.2260, lon: 135.1675 },
+      { name: "鳥取県", region: "中国地方", lat: 35.5011, lon: 134.2351 },
+      { name: "島根県", region: "中国地方", lat: 35.4723, lon: 133.0505 },
+      { name: "岡山県", region: "中国地方", lat: 34.6618, lon: 133.9344 },
+      { name: "広島県", region: "中国地方", lat: 34.3963, lon: 132.4594 },
+      { name: "山口県", region: "中国地方", lat: 34.1858, lon: 131.4714 },
+      { name: "徳島県", region: "四国地方", lat: 34.0657, lon: 134.5593 },
+      { name: "香川県", region: "四国地方", lat: 34.3401, lon: 134.0433 },
+      { name: "愛媛県", region: "四国地方", lat: 33.8416, lon: 132.7654 },
+      { name: "高知県", region: "四国地方", lat: 33.5597, lon: 133.5311 },
+      { name: "福岡県", region: "九州地方", lat: 33.6064, lon: 130.4181 },
+      { name: "佐賀県", region: "九州地方", lat: 33.2494, lon: 130.2988 },
+      { name: "長崎県", region: "九州地方", lat: 32.7448, lon: 129.8737 },
+      { name: "熊本県", region: "九州地方", lat: 32.7898, lon: 130.7417 },
+      { name: "大分県", region: "九州地方", lat: 33.2382, lon: 131.6126 },
+      { name: "宮崎県", region: "九州地方", lat: 31.9111, lon: 131.4239 },
+      { name: "鹿児島県", region: "九州地方", lat: 31.5602, lon: 130.5581 },
+      { name: "沖縄県", region: "沖縄", lat: 26.2124, lon: 127.6809 }
     ];
 
-    const eraSelect = document.getElementById('eraSelect');
+    // ドロップダウン初期化
     const yearSelect = document.getElementById('yearSelect');
     const monthSelect = document.getElementById('monthSelect');
     const daySelect = document.getElementById('daySelect');
+    const prefSelect = document.getElementById('prefSelect');
 
-    eras.forEach((era, idx) => {
-      const opt = document.createElement('option');
-      opt.value = idx; opt.innerText = era.name;
-      eraSelect.appendChild(opt);
-    });
-
-    function updateYears() {
-      const era = eras[eraSelect.value];
-      yearSelect.innerHTML = '';
-      const start = Math.max(1940, era.startYear);
-      for (let y = start; y <= era.endYear; y++) {
-        const opt = document.createElement('option');
-        opt.value = y;
-        opt.innerText = era.name === "西暦" ? `${y}年` : `${era.name}${(y - era.startYear + 1) === 1 ? '元' : (y - era.startYear + 1)}年 (${y})`;
-        yearSelect.appendChild(opt);
-      }
+    const currentYear = new Date().getFullYear();
+    for (let y = currentYear; y >= 1940; y--) {
+      yearSelect.add(new Option(`${y}年`, y));
     }
-
     for (let m = 1; m <= 12; m++) {
-      const opt = document.createElement('option');
-      opt.value = m; opt.innerText = `${m}月`;
-      monthSelect.appendChild(opt);
+      monthSelect.add(new Option(`${m}月`, m));
+    }
+    for (let d = 1; d <= 31; d++) {
+      daySelect.add(new Option(`${d}日`, d));
     }
 
-    function updateDays() {
-      const year = parseInt(yearSelect.value) || 1974;
-      const month = parseInt(monthSelect.value) || 2;
-      const daysInMonth = new Date(year, month, 0).getDate();
-      const currentSelectedDay = parseInt(daySelect.value) || 1;
-      daySelect.innerHTML = '';
-      for (let d = 1; d <= daysInMonth; d++) {
-        const opt = document.createElement('option');
-        opt.value = d; opt.innerText = `${d}日`;
-        if (d === currentSelectedDay) opt.selected = true;
-        daySelect.appendChild(opt);
+    prefectures.forEach((p, idx) => {
+      prefSelect.add(new Option(p.name, idx));
+    });
+
+    // 取得したデータの保持用
+    let currentData = null;
+
+    // 詳細な天気マッピング表
+    const weatherMap = {
+      0: { text: "快晴", icon: "☀️", simple: "快晴" },
+      1: { text: "晴れ", icon: "🌤️", simple: "晴れ" },
+      2: { text: "一部曇り", icon: "⛅", simple: "晴れ・曇り" },
+      3: { text: "曇り", icon: "☁️", simple: "曇り" },
+      45: { text: "霧", icon: "🌫️", simple: "曇り" },
+      48: { text: "霧氷", icon: "🌫️", simple: "曇り" },
+      51: { text: "霧雨", icon: "🌧️", simple: "雨" },
+      61: { text: "弱い雨", icon: "☔", simple: "雨" },
+      63: { text: "雨", icon: "☔", simple: "雨" },
+      65: { text: "強い雨", icon: "🌧️", simple: "雨" },
+      71: { text: "弱い雪", icon: "❄️", simple: "雪" },
+      73: { text: "雪", icon: "❄️", simple: "雪" },
+      75: { text: "強い雪", icon: "☃️", simple: "雪" },
+      80: { text: "にわか雨", icon: "🌦️", simple: "雨" },
+      95: { text: "雷雨", icon: "⚡", simple: "荒天" }
+    };
+
+    // 天気コード変換関数
+    function getWeatherLabel(code) {
+      if (weatherMap[code]) {
+        const item = weatherMap[code];
+        return {
+          text: `${item.text} ${item.icon}`,
+          simple: item.simple
+        };
       }
+      
+      // 予備データ
+      if (code <= 3) return { text: "晴れ/曇り ⛅", simple: "晴れ・曇り" };
+      if (code <= 67) return { text: "雨 ☔", simple: "雨" };
+      if (code <= 77) return { text: "雪 ❄️", simple: "雪" };
+      return { text: "荒天 ⛈️", simple: "荒天" };
     }
 
-    eraSelect.value = 0; updateYears();
-    yearSelect.value = 1974; monthSelect.value = 2;
-    updateDays(); daySelect.value = 13;
-
-    eraSelect.addEventListener('change', () => { updateYears(); updateDays(); });
-    yearSelect.addEventListener('change', updateDays);
-    monthSelect.addEventListener('change', updateDays);
-
-    // 地名データ読込 & 候補検索
-    let JAPAN_LOCATION_DB = [];
-    let selectedRegion = ""; // 変数を上位で定義
-    const regionSelect = document.getElementById('regionSelect');
-    const locationInput = document.getElementById('location');
-    const suggestList = document.getElementById('suggestList');
-    const errorMsg = document.getElementById('errorMsg');
-
-    regionSelect.addEventListener('change', async () => {
-      selectedRegion = regionSelect.value;
-      locationInput.value = '';
-      selectedGeoData = null;
-      suggestList.style.display = 'none';
-      errorMsg.style.display = 'none';
-
-      if (!selectedRegion) {
-        locationInput.disabled = true;
-        locationInput.placeholder = "先に地方を選択してください";
-        JAPAN_LOCATION_DB = [];
-        return;
-      }
-
-      try {
-        locationInput.disabled = true;
-        locationInput.placeholder = "データを読み込み中...";
-        
-        const res = await fetch(`./${selectedRegion}.json`);
-        if (!res.ok) throw new Error('地名データベースの読み込みに失敗しました。');
-        
-        JAPAN_LOCATION_DB = await res.json();
-        locationInput.disabled = false;
-        locationInput.placeholder = "例: 渋谷区、浜松市中央区など";
-      } catch (err) {
-        console.error("DB Load Error:", err);
-        errorMsg.innerText = "選択された地方のデータ読み込みに失敗しました。";
-        errorMsg.style.display = 'block';
-        locationInput.disabled = true;
-        locationInput.placeholder = "読み込みエラー";
-      }
-    });
-
-    let selectedGeoData = null;
-
-    function searchLocalGeocode(queryText) {
-      if (!queryText || JAPAN_LOCATION_DB.length === 0) return [];
-      const q = queryText.replace(/\s+/g, '').toLowerCase();
-      return JAPAN_LOCATION_DB.filter(item => {
-        if (!item || !item.name) return false;
-        return item.name.replace(/\s+/g, '').toLowerCase().includes(q);
-      });
+    // 季節の判定
+    function getSeason(month) {
+      if (month >= 3 && month <= 5) return "春";
+      if (month >= 6 && month <= 8) return "夏";
+      if (month >= 9 && month <= 11) return "秋";
+      return "冬";
     }
 
-    locationInput.addEventListener('input', () => {
-      selectedGeoData = null;
-      const rawQuery = locationInput.value.trim();
-      if (rawQuery.length < 1) { suggestList.style.display = 'none'; return; }
-
-      const results = searchLocalGeocode(rawQuery);
-      if (results.length > 0) {
-        suggestList.innerHTML = '';
-        results.slice(0, 30).forEach(res => {
-          const div = document.createElement('div');
-          div.className = 'suggest-item';
-          div.innerText = res.name;
-          div.addEventListener('click', () => {
-            locationInput.value = res.name;
-            selectedGeoData = { displayName: res.name, lat: res.lat, lon: res.lon };
-            suggestList.style.display = 'none';
-          });
-          suggestList.appendChild(div);
-        });
-        suggestList.style.display = 'block';
-      } else {
-        suggestList.style.display = 'none';
-      }
-    });
-
-    document.addEventListener('click', (e) => {
-      if (!locationInput.contains(e.target) && !suggestList.contains(e.target)) {
-        suggestList.style.display = 'none';
-      }
-    });
-
-    let shareDataPayload = { title: '', text: '', url: '' };
-
+    // フォーム送信
     document.getElementById('weatherForm').addEventListener('submit', async (e) => {
       e.preventDefault();
+      
       const year = yearSelect.value;
       const month = String(monthSelect.value).padStart(2, '0');
       const day = String(daySelect.value).padStart(2, '0');
       const dateStr = `${year}-${month}-${day}`;
-      const dateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-      const dayOfWeek = weekDays[dateObj.getDay()];
-      const inputText = locationInput.value.trim();
 
-      const loading = document.getElementById('loading');
-      const resultCard = document.getElementById('resultCard');
-
-      loading.style.display = 'block';
-      errorMsg.style.display = 'none';
-      resultCard.style.display = 'none';
+      const prefIdx = prefSelect.value;
+      const prefData = prefectures[prefIdx];
 
       try {
-        let geo = selectedGeoData;
-        
-        if (!geo || geo.displayName !== inputText) {
-          const searchResults = searchLocalGeocode(inputText);
-          if (searchResults.length > 0) {
-            geo = { displayName: searchResults[0].name, lat: searchResults[0].lat, lon: searchResults[0].lon };
-          }
+        const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${prefData.lat}&longitude=${prefData.lon}&start_date=${dateStr}&end_date=${dateStr}&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia%2FTokyo`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.daily) {
+          const maxTemp = data.daily.temperature_2m_max[0];
+          const minTemp = data.daily.temperature_2m_min[0];
+          const code = data.daily.weather_code[0];
+          const weatherInfo = getWeatherLabel(code);
+
+          currentData = {
+            year, month: monthSelect.value, day: daySelect.value,
+            pref: prefData.name, region: prefData.region,
+            weatherText: weatherInfo.text, weatherSimple: weatherInfo.simple,
+            maxTemp, minTemp
+          };
+
+          document.getElementById('resDateLoc').innerText = `${year}年${monthSelect.value}月${daySelect.value}日（${prefData.name}）`;
+          document.getElementById('resWeather').innerText = weatherInfo.text;
+          document.getElementById('resTemps').innerText = `最高 ${maxTemp}℃ / 最低 ${minTemp}℃`;
+          document.getElementById('resultCard').style.display = 'block';
         }
-
-        if (!geo) {
-          throw new Error('指定された場所が見つかりませんでした。入力時に表示されるリストの候補を選択してください。');
-        }
-
-        const weatherUrl = `https://archive-api.open-meteo.com/v1/archive?latitude=${geo.lat}&longitude=${geo.lon}&start_date=${dateStr}&end_date=${dateStr}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Asia%2FTokyo`;
-        const res = await fetch(weatherUrl);
-        if (!res.ok) throw new Error('天気データの取得に失敗しました。');
-
-        const weatherData = await res.json();
-        if (!weatherData.daily || !weatherData.daily.weather_code) {
-          throw new Error('該当する日付の気象データが存在しませんでした。');
-        }
-
-        const code = weatherData.daily.weather_code[0];
-        const maxTemp = weatherData.daily.temperature_2m_max[0];
-        const minTemp = weatherData.daily.temperature_2m_min[0];
-        const precip = weatherData.daily.precipitation_sum[0] ?? 0;
-        const weatherInfo = weatherMap[code] || { text: "晴れ/曇り", icon: "🌤️" };
-
-        document.getElementById('resultHeader').innerText = `${year}年${parseInt(month)}月${parseInt(day)}日(${dayOfWeek})\n${geo.displayName} 付近`;
-        document.getElementById('weatherIcon').innerText = weatherInfo.icon;
-        document.getElementById('weatherText').innerText = weatherInfo.text;
-        document.getElementById('tempMax').innerText = `${maxTemp} ℃`;
-        document.getElementById('tempMin').innerText = `${minTemp} ℃`;
-        document.getElementById('precip').innerText = `${precip} mm`;
-
-        // シェア用データの生成
-        const currentUrl = window.location.href;
-        shareDataPayload = {
-          title: '私が生まれた日の空模様',
-          text: `私が生まれた日（${year}年${parseInt(month)}月${parseInt(day)}日(${dayOfWeek}) ${geo.displayName} 付近）の空模様は【${weatherInfo.text} ${weatherInfo.icon}】でした！\n(最高: ${maxTemp}℃ / 最低: ${minTemp}℃ / 降水量: ${precip}mm)\n#私が生まれた日の空模様\n`,
-          url: currentUrl
-        };
-
-        // GA4へ検索ログを送信
-        if (typeof gtag === 'function') {
-          gtag('event', 'search_weather', {
-            'search_region': selectedRegion,
-            'search_location': geo.displayName,
-            'birth_year': parseInt(year),
-            'birth_era': eras[eraSelect.value].name
-          });
-        }
-
-        resultCard.style.display = 'block';
       } catch (err) {
-        errorMsg.innerText = err.message;
-        errorMsg.style.display = 'block';
-      } finally {
-        loading.style.display = 'none';
+        alert('気象データの取得に失敗しました。');
       }
     });
 
     // モーダル表示制御
-    const infoModal = document.getElementById('infoModal');
-    document.getElementById('infoBtn').addEventListener('click', () => infoModal.style.display = 'flex');
-    document.getElementById('modalCloseBtn').addEventListener('click', () => infoModal.style.display = 'none');
-
-    // シェア機能
-    document.getElementById('shareBtn').addEventListener('click', async () => {
-      const shareToast = document.getElementById('shareToast');
-      shareToast.style.display = 'none';
-
-      if (navigator.share) {
-        try {
-          await navigator.share(shareDataPayload);
-        } catch (err) {}
-      } else if (navigator.clipboard) {
-        const fullText = `${shareDataPayload.text}\n参照URL: ${shareDataPayload.url}`;
-        await navigator.clipboard.writeText(fullText);
-        shareToast.style.display = 'block';
-        setTimeout(() => { shareToast.style.display = 'none'; }, 3000);
-      }
+    const shareModal = document.getElementById('shareModal');
+    document.getElementById('openShareModalBtn').addEventListener('click', () => {
+      shareModal.style.display = 'flex';
+    });
+    document.getElementById('closeShareModalBtn').addEventListener('click', () => {
+      shareModal.style.display = 'none';
     });
 
-    // ==========================================
-    // 1. PWA インストール案内ロジック
-    // ==========================================
-    let deferredPrompt = null;
-    const pwaBanner = document.getElementById('pwaBanner');
-    const pwaActionBtn = document.getElementById('pwaActionBtn');
-    const pwaDismissBtn = document.getElementById('pwaDismissBtn');
-    const pwaInstallBtnNav = document.getElementById('pwaInstallBtn');
-    const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    // シェア文言作成ロジック
+    function buildShareText() {
+      if (!currentData) return '';
 
-    // iOS、または標準プロンプトが受け取れる場合のボタン表示
-    if (isiOS || 'BeforeInstallPromptEvent' in window) {
-      pwaInstallBtnNav.style.display = 'flex';
+      const level = document.querySelector('input[name="privacyLevel"]:checked').value;
+      const season = getSeason(parseInt(currentData.month));
+      const roundMax = Math.round(currentData.maxTemp);
+
+      if (level === 'season') {
+        return `${currentData.region}で${season}に生まれた私の日の空模様は【${currentData.weatherSimple} / 最高気温${roundMax}℃前後】でした！ #私が生まれた日の空模様`;
+      } else if (level === 'birthday') {
+        return `${currentData.month}月${currentData.day}日生まれ（${currentData.pref}）の私が生まれた日の空は【${currentData.weatherText}】最高${currentData.maxTemp}℃でした！ #私が生まれた日の空模様`;
+      } else {
+        return `${currentData.year}年${currentData.month}月${currentData.day}日 ${currentData.pref}で生まれた日の空模様は【${currentData.weatherText}】最高${currentData.maxTemp}℃ / 最低${currentData.minTemp}℃ でした！ #私が生まれた日の空模様`;
+      }
     }
 
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      
-      // 初回訪問時のみ自動表示
-      if (!localStorage.getItem('pwaPromptDismissed')) {
-        setTimeout(() => { showPwaBanner(); }, 2000);
+    // 各シェアボタンイベント
+    document.getElementById('shareXBtn').addEventListener('click', () => {
+      const text = encodeURIComponent(buildShareText());
+      window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+    });
+
+    document.getElementById('shareLineBtn').addEventListener('click', () => {
+      const text = encodeURIComponent(buildShareText());
+      window.open(`https://line.me/R/msg/text/?${text}`, '_blank');
+    });
+
+    document.getElementById('shareWebBtn').addEventListener('click', async () => {
+      const text = buildShareText();
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: '私が生まれた日の空模様',
+            text: text
+          });
+        } catch (err) {}
+      } else {
+        await navigator.clipboard.writeText(text);
+        alert('シェア用テキストをクリップボードにコピーしました！');
       }
     });
 
+    // PWA案内バナー制御
+    const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const pwaBanner = document.getElementById('pwaBanner');
+    const pwaActionBtn = document.getElementById('pwaActionBtn');
+
     function showPwaBanner() {
+      if (window.matchMedia('(display-mode: standalone)').matches) return;
+
       if (isiOS) {
         document.getElementById('pwaBannerText').innerText = "Safariの「共有ボタン (↑)」をタップし、「ホーム画面に追加」を選択してください。";
         pwaActionBtn.innerText = "OK";
@@ -633,87 +628,12 @@ select, input[type="text"] {
       pwaBanner.style.display = 'block';
     }
 
-    pwaActionBtn.addEventListener('click', async () => {
+    document.getElementById('pwaDismissBtn').addEventListener('click', () => {
       pwaBanner.style.display = 'none';
-      localStorage.setItem('pwaPromptDismissed', 'true');
-
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        deferredPrompt = null;
-      }
-      
-      // インストール後・閉じたた後にチュートリアルチェック
-      checkAutoStartTutorial();
     });
 
-    pwaDismissBtn.addEventListener('click', () => {
-      pwaBanner.style.display = 'none';
-      localStorage.setItem('pwaPromptDismissed', 'true');
-      checkAutoStartTutorial();
-    });
-
-    pwaInstallBtnNav.addEventListener('click', () => {
-      showPwaBanner();
-    });
-
-    // ==========================================
-    // 2. チュートリアルロジック
-    // ==========================================
-    const tutModal = document.getElementById('tutModal');
-    const tutSteps = document.querySelectorAll('.tutorial-step');
-    const tutDots = document.querySelectorAll('.dot');
-    const tutPrevBtn = document.getElementById('tutPrevBtn');
-    const tutNextBtn = document.getElementById('tutNextBtn');
-    let currentTutStep = 1;
-
-    function showStep(step) {
-      currentTutStep = step;
-      tutSteps.forEach((el, idx) => {
-        el.classList.toggle('active', (idx + 1) === step);
-      });
-      tutDots.forEach((el, idx) => {
-        el.classList.toggle('active', (idx + 1) === step);
-      });
-
-      tutPrevBtn.disabled = (step === 1);
-      tutNextBtn.innerText = (step === tutSteps.length) ? '完了' : '次へ';
-    }
-
-    function openTutorial() {
-      showStep(1);
-      tutModal.style.display = 'flex';
-    }
-
-    tutPrevBtn.addEventListener('click', () => {
-      if (currentTutStep > 1) showStep(currentTutStep - 1);
-    });
-
-    tutNextBtn.addEventListener('click', () => {
-      if (currentTutStep < tutSteps.length) {
-        showStep(currentTutStep + 1);
-      } else {
-        tutModal.style.display = 'none';
-        localStorage.setItem('tutorialCompleted', 'true');
-      }
-    });
-
-    document.getElementById('tutBtn').addEventListener('click', openTutorial);
-
-    // 初回起動時の自動判定
-    function checkAutoStartTutorial() {
-      if (!localStorage.getItem('tutorialCompleted')) {
-        setTimeout(() => { openTutorial(); }, 500);
-      }
-    }
-
-    // PWA案内が出ない環境（既にインストール済み、または非対応PC等）での初回チュートリアル起動
     window.addEventListener('load', () => {
-      setTimeout(() => {
-        if (!deferredPrompt && !isiOS) {
-          checkAutoStartTutorial();
-        }
-      }, 2500);
+      setTimeout(showPwaBanner, 1500);
     });
   </script>
 </body>
