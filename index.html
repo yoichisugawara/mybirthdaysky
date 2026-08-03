@@ -4,13 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>私が生まれた日の空模様</title>
-
-  <!-- PWA用設定 -->
-  <link rel="manifest" href="./manifest.json">
-  <meta name="theme-color" content="#4a90e2">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-
   <style>
     :root {
       --primary-color: #4a90e2;
@@ -59,19 +52,24 @@
     label { display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 4px; color: #555; }
     .label-hint { display: block; font-size: 0.75rem; color: var(--sub-text); margin-bottom: 6px; }
 
-    /* スマホで日付がはみ出さないよう調整・縮小 */
-    .date-selectors { display: flex; gap: 4px; }
+    .date-selectors { display: flex; gap: 6px; }
 
     select, input[type="text"] {
-      padding: 10px 4px; border: 1px solid #ccc;
-      border-radius: 10px; font-size: 0.88rem; outline: none; background: #fff;
+      width: 100%;
+      padding: 10px 8px; border: 1px solid #ccc;
+      border-radius: 10px; font-size: 0.95rem; outline: none; background: #fff;
     }
 
-    .select-era { flex: 1.2; }
-    .select-year { flex: 1.1; }
-    .select-month { flex: 0.8; }
-    .select-day { flex: 0.8; }
-    input[type="text"] { width: 100%; padding: 12px; font-size: 0.95rem; }
+    .select-era { flex: 1.3; }
+    .select-year { flex: 1; }
+    .select-month { flex: 0.9; }
+    .select-day { flex: 0.9; }
+    input[type="text"] { width: 100%; padding: 12px; }
+
+    select:disabled, input[type="text"]:disabled {
+      background-color: #e9ecef;
+      cursor: not-allowed;
+    }
 
     .suggest-list {
       position: absolute; top: 100%; left: 0; right: 0;
@@ -98,6 +96,7 @@
       display: none; margin-top: 20px; padding: 20px;
       background: linear-gradient(135deg, #e6f2ff 0%, #ffffff 100%);
       border-radius: 15px; border: 1px solid #d0e3ff;
+      /* スマホなどの狭い画面での日付やテキストのはみ出し対策 */
       word-break: break-all;
       overflow-wrap: break-word;
     }
@@ -141,6 +140,22 @@
     <p class="subtitle">あなたが生まれた日の天気と気温をお調べします</p>
 
     <form id="weatherForm">
+      <!-- 地方選択エリアを追加 -->
+      <div class="form-group">
+        <label for="regionSelect">【1】地方を選択</label>
+        <select id="regionSelect">
+          <option value="">-- 地方を選んでください --</option>
+          <option value="hokkaido">北海道地方</option>
+          <option value="tohoku">東北地方</option>
+          <option value="kanto">関東地方</option>
+          <option value="chubu">中部地方</option>
+          <option value="kinki">近畿地方</option>
+          <option value="chugoku">中国地方</option>
+          <option value="shikoku">四国地方</option>
+          <option value="kyushu_okinawa">九州・沖縄地方</option>
+        </select>
+      </div>
+
       <div class="form-group">
         <label>生年月日</label>
         <div class="date-selectors">
@@ -152,9 +167,9 @@
       </div>
 
       <div class="form-group">
-        <label for="location">生まれた場所（市区町村）</label>
-        <span class="label-hint">※候補が出たら該当する都道府県・市区町村を選択してください。</span>
-        <input type="text" id="location" placeholder="例: さいたま市、浜松市天竜区、静岡市葵区" autocomplete="off" required>
+        <label for="location">【2】生まれた場所（現在の市区町村名）</label>
+        <span class="label-hint">※先に地方を選択してください。候補が出たら選択します。</span>
+        <input type="text" id="location" placeholder="先に地方を選択してください" autocomplete="off" disabled required>
         <div id="suggestList" class="suggest-list"></div>
       </div>
 
@@ -175,17 +190,17 @@
         <div class="temp-box">降水量<span id="precip" class="precip">-- mm</span></div>
       </div>
 
-      <button id="shareBtn" type="button" class="btn-share">🔗 結果をシェアする</button>
-      <div id="shareToast" class="share-toast">結果をクリップボードにコピーしました（URL付き）！</div>
+      <button id="shareBtn" type="button" class="btn-share">🔗 結果をシェアする（URL付き）</button>
+      <div id="shareToast" class="share-toast">結果をクリップボードにコピーしました！</div>
     </div>
   </div>
 
   <div id="infoModal" class="modal-overlay">
     <div class="modal-content">
       <h3>ℹ️ データ出典・使用技術について</h3>
-      <p>ローカル保持された全国地名データベースと、気象APIサービスを利用して過去の気象データを高精度に計算します。</p>
+      <p>地方別に分割されたローカル地名データベースと、気象APIサービスを利用して過去の気象データを高精度に計算します。</p>
       <ul>
-        <li><strong>位置情報:</strong> ローカル保持データベース (`japan_locations.json`)</li>
+        <li><strong>位置情報:</strong> 8地方別JSONファイル (`hokkaido.json` 等)</li>
         <li><strong>気象データ:</strong> Open-Meteo Historical Weather API</li>
       </ul>
       <button type="button" class="modal-close-btn" id="modalCloseBtn">閉じる</button>
@@ -271,22 +286,50 @@
     yearSelect.addEventListener('change', updateDays);
     monthSelect.addEventListener('change', updateDays);
 
+    // ==========================================
+    // 8地方区分のJSON動的読み込み処理
+    // ==========================================
     let JAPAN_LOCATION_DB = [];
-
-    async function loadLocationDB() {
-      try {
-        const res = await fetch('./japan_locations.json');
-        if (!res.ok) throw new Error('地名データベースの読み込みに失敗しました。');
-        JAPAN_LOCATION_DB = await res.json();
-      } catch (err) {
-        console.error("DB Load Error:", err);
-      }
-    }
-    loadLocationDB();
-
-    let selectedGeoData = null;
+    const regionSelect = document.getElementById('regionSelect');
     const locationInput = document.getElementById('location');
     const suggestList = document.getElementById('suggestList');
+    const errorMsg = document.getElementById('errorMsg');
+
+    regionSelect.addEventListener('change', async () => {
+      const selectedRegion = regionSelect.value;
+      locationInput.value = '';
+      selectedGeoData = null;
+      suggestList.style.display = 'none';
+      errorMsg.style.display = 'none';
+
+      if (!selectedRegion) {
+        locationInput.disabled = true;
+        locationInput.placeholder = "先に地方を選択してください";
+        JAPAN_LOCATION_DB = [];
+        return;
+      }
+
+      try {
+        locationInput.disabled = true;
+        locationInput.placeholder = "データを読み込み中...";
+        
+        // 選択された地方のJSONファイルを読み込む（例: chubu.json）
+        const res = await fetch(`./${selectedRegion}.json`);
+        if (!res.ok) throw new Error('地名データベースの読み込みに失敗しました。');
+        
+        JAPAN_LOCATION_DB = await res.json();
+        locationInput.disabled = false;
+        locationInput.placeholder = "例: 静岡市清水区、浜松市中央区など";
+      } catch (err) {
+        console.error("DB Load Error:", err);
+        errorMsg.innerText = "選択された地方のデータ読み込みに失敗しました。";
+        errorMsg.style.display = 'block';
+        locationInput.disabled = true;
+        locationInput.placeholder = "読み込みエラー";
+      }
+    });
+
+    let selectedGeoData = null;
 
     function searchLocalGeocode(queryText) {
       if (!queryText || JAPAN_LOCATION_DB.length === 0) return [];
@@ -341,7 +384,6 @@
       const inputText = locationInput.value.trim();
 
       const loading = document.getElementById('loading');
-      const errorMsg = document.getElementById('errorMsg');
       const resultCard = document.getElementById('resultCard');
 
       loading.style.display = 'block';
@@ -384,7 +426,7 @@
         document.getElementById('tempMin').innerText = `${minTemp} ℃`;
         document.getElementById('precip').innerText = `${precip} mm`;
 
-        // サイトのURLを含めたシェア用テキスト
+        // クリップボードコピー用テキスト（現在のサイトURLを末尾に自動付与）
         const currentUrl = window.location.href;
         currentShareText = `私が生まれた日（${year}年${parseInt(month)}月${parseInt(day)}日(${dayOfWeek}) ${geo.displayName} 付近）の空模様は【${weatherInfo.text} ${weatherInfo.icon}】でした！\n(最高: ${maxTemp}℃ / 最低: ${minTemp}℃ / 降水量: ${precip}mm)\n\n参照URL: ${currentUrl}\n#私が生まれた日の空模様`;
 
@@ -401,37 +443,13 @@
     document.getElementById('infoBtn').addEventListener('click', () => infoModal.style.display = 'flex');
     document.getElementById('modalCloseBtn').addEventListener('click', () => infoModal.style.display = 'none');
 
-    // スマホ標準シェア（Web Share API）対応 ＋ クリップボードコピー
     document.getElementById('shareBtn').addEventListener('click', async () => {
       const shareToast = document.getElementById('shareToast');
-
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: '私が生まれた日の空模様',
-            text: currentShareText,
-            url: window.location.href
-          });
-        } catch (err) {
-          console.log('シェアがキャンセルされました', err);
-        }
-      } else {
-        if (navigator.clipboard) {
-          await navigator.clipboard.writeText(currentShareText);
-          shareToast.style.display = 'block';
-          setTimeout(() => { shareToast.style.display = 'none'; }, 3000);
-        }
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(currentShareText);
+        shareToast.style.display = 'block';
       }
     });
-
-    // サービスワーカー（PWA用）の登録
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then((reg) => console.log('ServiceWorker 登録成功:', reg.scope))
-          .catch((err) => console.log('ServiceWorker 登録失敗:', err));
-      });
-    }
   </script>
 </body>
 </html>
