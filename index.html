@@ -4,6 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>私が生まれた日の空模様</title>
+
+  <!-- Google アナリティクス -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-7N43XQ844K"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-7N43XQ844K');
+</script>
   
   <!-- PWA関連の設定 -->
   <link rel="manifest" href="manifest.json">
@@ -460,6 +470,16 @@
           url: currentUrl
         };
 
+        // GA4へ検索ログを送信
+        if (typeof gtag === 'function') {
+          gtag('event', 'search_weather', {
+            'search_region': selectedRegion,
+            'search_location': geo.displayName,
+            'birth_year': parseInt(year),
+            'birth_era': eras[eraSelect.value].name
+          });
+        }
+        
         resultCard.style.display = 'block';
       } catch (err) {
         errorMsg.innerText = err.message;
