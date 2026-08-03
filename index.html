@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>私が生まれた日の空模様</title>
+
+  <!-- PWA用設定 -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#4a90e2">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
   <style>
     :root {
       --primary-color: #4a90e2;
@@ -52,18 +59,19 @@
     label { display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 4px; color: #555; }
     .label-hint { display: block; font-size: 0.75rem; color: var(--sub-text); margin-bottom: 6px; }
 
-    .date-selectors { display: flex; gap: 6px; }
+    /* スマホで日付がはみ出さないよう調整・縮小 */
+    .date-selectors { display: flex; gap: 4px; }
 
     select, input[type="text"] {
-      padding: 10px 8px; border: 1px solid #ccc;
-      border-radius: 10px; font-size: 0.95rem; outline: none; background: #fff;
+      padding: 10px 4px; border: 1px solid #ccc;
+      border-radius: 10px; font-size: 0.88rem; outline: none; background: #fff;
     }
 
-    .select-era { flex: 1.3; }
-    .select-year { flex: 1; }
-    .select-month { flex: 0.9; }
-    .select-day { flex: 0.9; }
-    input[type="text"] { width: 100%; padding: 12px; }
+    .select-era { flex: 1.2; }
+    .select-year { flex: 1.1; }
+    .select-month { flex: 0.8; }
+    .select-day { flex: 0.8; }
+    input[type="text"] { width: 100%; padding: 12px; font-size: 0.95rem; }
 
     .suggest-list {
       position: absolute; top: 100%; left: 0; right: 0;
@@ -90,6 +98,8 @@
       display: none; margin-top: 20px; padding: 20px;
       background: linear-gradient(135deg, #e6f2ff 0%, #ffffff 100%);
       border-radius: 15px; border: 1px solid #d0e3ff;
+      word-break: break-all;
+      overflow-wrap: break-word;
     }
 
     .result-date-location { font-size: 0.95rem; font-weight: bold; margin-bottom: 12px; line-height: 1.5; white-space: pre-wrap; }
@@ -166,7 +176,7 @@
       </div>
 
       <button id="shareBtn" type="button" class="btn-share">🔗 結果をシェアする</button>
-      <div id="shareToast" class="share-toast">結果をクリップボードにコピーしました！</div>
+      <div id="shareToast" class="share-toast">結果をクリップボードにコピーしました（URL付き）！</div>
     </div>
   </div>
 
@@ -206,7 +216,7 @@
       { name: "昭和", startYear: 1926, endYear: 1989 },
       { name: "平成", startYear: 1989, endYear: 2019 },
       { name: "令和", startYear: 2019, endYear: 2026 },
-      { name: "大正", startYear: 1940, endYear: 1926 }, // Open-Meteo APIの対応範囲（1940年〜）に合わせて最小1940年
+      { name: "大正", startYear: 1940, endYear: 1926 },
       { name: "西暦", startYear: 1940, endYear: 2026 }
     ];
 
@@ -224,7 +234,7 @@
     function updateYears() {
       const era = eras[eraSelect.value];
       yearSelect.innerHTML = '';
-      const start = Math.max(1940, era.startYear); // APIの下限1940年に安全制御
+      const start = Math.max(1940, era.startYear);
       for (let y = start; y <= era.endYear; y++) {
         const opt = document.createElement('option');
         opt.value = y;
@@ -261,9 +271,6 @@
     yearSelect.addEventListener('change', updateDays);
     monthSelect.addEventListener('change', updateDays);
 
-    // ==========================================
-    // 地名データベースの非同期読み込み処理
-    // ==========================================
     let JAPAN_LOCATION_DB = [];
 
     async function loadLocationDB() {
@@ -344,7 +351,6 @@
       try {
         let geo = selectedGeoData;
         
-        // 候補から選択していない、あるいは直接打ち込んだ場合の判定強化
         if (!geo || geo.displayName !== inputText) {
           const searchResults = searchLocalGeocode(inputText);
           if (searchResults.length > 0) {
@@ -378,7 +384,9 @@
         document.getElementById('tempMin').innerText = `${minTemp} ℃`;
         document.getElementById('precip').innerText = `${precip} mm`;
 
-        currentShareText = `私が生まれた日（${year}年${parseInt(month)}月${parseInt(day)}日(${dayOfWeek}) ${geo.displayName} 付近）の空模様は【${weatherInfo.text} ${weatherInfo.icon}】でした！\n(最高: ${maxTemp}℃ / 最低: ${minTemp}℃ / 降水量: ${precip}mm)\n#私が生まれた日の空模様`;
+        // サイトのURLを含めたシェア用テキスト
+        const currentUrl = window.location.href;
+        currentShareText = `私が生まれた日（${year}年${parseInt(month)}月${parseInt(day)}日(${dayOfWeek}) ${geo.displayName} 付近）の空模様は【${weatherInfo.text} ${weatherInfo.icon}】でした！\n(最高: ${maxTemp}℃ / 最低: ${minTemp}℃ / 降水量: ${precip}mm)\n\n参照URL: ${currentUrl}\n#私が生まれた日の空模様`;
 
         resultCard.style.display = 'block';
       } catch (err) {
@@ -393,13 +401,37 @@
     document.getElementById('infoBtn').addEventListener('click', () => infoModal.style.display = 'flex');
     document.getElementById('modalCloseBtn').addEventListener('click', () => infoModal.style.display = 'none');
 
+    // スマホ標準シェア（Web Share API）対応 ＋ クリップボードコピー
     document.getElementById('shareBtn').addEventListener('click', async () => {
       const shareToast = document.getElementById('shareToast');
-      if (navigator.clipboard) {
-        await navigator.clipboard.writeText(currentShareText);
-        shareToast.style.display = 'block';
+
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: '私が生まれた日の空模様',
+            text: currentShareText,
+            url: window.location.href
+          });
+        } catch (err) {
+          console.log('シェアがキャンセルされました', err);
+        }
+      } else {
+        if (navigator.clipboard) {
+          await navigator.clipboard.writeText(currentShareText);
+          shareToast.style.display = 'block';
+          setTimeout(() => { shareToast.style.display = 'none'; }, 3000);
+        }
       }
     });
+
+    // サービスワーカー（PWA用）の登録
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => console.log('ServiceWorker 登録成功:', reg.scope))
+          .catch((err) => console.log('ServiceWorker 登録失敗:', err));
+      });
+    }
   </script>
 </body>
 </html>
