@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- 背景の空のグラデーション -->
+    <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4a90e2" />
+      <stop offset="100%" stop-color="#87ceeb" />
+    </linearGradient>
+    <!-- 太陽のグラデーション -->
+    <linearGradient id="sunGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffeb3b" />
+      <stop offset="100%" stop-color="#ff9800" />
+    </linearGradient>
+  </defs>
+
+  <!-- 丸みのあるアプリコアイコンベース（角丸正方形） -->
+  <rect width="512" height="512" rx="112" fill="url(#skyGrad)" />
+
+  <!-- 太陽 -->
+  <circle cx="360" cy="150" r="65" fill="url(#sunGrad)" />
+
+  <!-- 雲（重なり合う白い円とパス） -->
+  <g fill="#ffffff">
+    <circle cx="180" cy="340" r="75" />
+    <circle cx="260" cy="320" r="95" />
+    <circle cx="350" cy="350" r="70" />
+    <rect x="180" y="335" width="170" height="85" rx="40" />
+  </g>
+</svg>
